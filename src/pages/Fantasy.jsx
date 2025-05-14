@@ -6,6 +6,7 @@ export default function Fantasy() {
   const [teamId, setTeamId] = useState("");
   const [startingPlayers, setStartingPlayers] = useState([]);
   const [benchPlayers, setBenchPlayers] = useState([]);
+  const [totalPoints, setTotalPoints] = useState(0); // Dodano za skupne točke
   const [loading, setLoading] = useState(false);
 
   const getPlayersByPosition = (players, pos) =>
@@ -20,15 +21,18 @@ export default function Fantasy() {
       if (data.starting_players && data.bench_players) {
         setStartingPlayers(data.starting_players);
         setBenchPlayers(data.bench_players);
+        setTotalPoints(data.total_points); // Nastavi skupne točke
       } else {
         console.error("Unexpected API response structure:", data);
         setStartingPlayers([]);
         setBenchPlayers([]);
+        setTotalPoints(0); // Ponastavi skupne točke
       }
     } catch (error) {
       console.error("Failed to load team:", error);
       setStartingPlayers([]);
       setBenchPlayers([]);
+      setTotalPoints(0); // Ponastavi skupne točke
     } finally {
       setLoading(false);
     }
@@ -101,6 +105,7 @@ export default function Fantasy() {
                         <div className="font-semibold">
                           {p.first_name[0]}. {p.second_name}
                         </div>
+                        <div className="text-xs text-gray-500">Points: {p.points}</div> {/* Prikaz točk */}
                         {p.is_captain && <div className="text-xs text-yellow-600">Captain</div>}
                         {p.is_vice_captain && <div className="text-xs text-gray-300">Vice</div>}
                       </div>
@@ -109,6 +114,11 @@ export default function Fantasy() {
                 ))}
               </div>
             )}
+
+            {/* Total Points */}
+            <div className="mt-8 text-center text-lg font-bold text-emerald-700 dark:text-emerald-300">
+              Total Points: {totalPoints} {/* Prikaz skupnih točk */}
+            </div>
 
             {/* Bench Players */}
             {benchPlayers.length > 0 && (
@@ -125,6 +135,7 @@ export default function Fantasy() {
                       <div className="font-semibold">
                         {p.first_name[0]}. {p.second_name}
                       </div>
+                      <div className="text-xs text-gray-500">Points: {p.points}</div> {/* Prikaz točk */}
                       <div className="text-xs text-gray-500">Bench</div>
                     </div>
                   ))}
