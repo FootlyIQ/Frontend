@@ -1,6 +1,6 @@
 import Navbar from "../components/Navbar";
-import MatchFeed from "../components/MatchFeed";
-import RightSidebar from "../components/RightSidebar";
+import MatchFeed from "../components/Home/MatchFeed";
+import RightSidebar from "../components/Home/RightSidebar";
 
 
 export default function Home() {
