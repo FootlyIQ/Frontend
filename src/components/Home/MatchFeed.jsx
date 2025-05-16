@@ -1,15 +1,17 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom'; // ⬅️ Novo
 import axios from 'axios';
 
 export default function MatchFeed() {
   const [matchesData, setMatchesData] = useState([]);
   const [error, setError] = useState('');
+  const navigate = useNavigate(); // ⬅️ Novo
 
   useEffect(() => {
     const fetchMatches = async () => {
       try {
         const response = await axios.get('http://127.0.0.1:5000/matches');
-        setMatchesData(response.data); // ← tvoji podatki (liga + tekme)
+        setMatchesData(response.data);
       } catch (err) {
         console.error('Napaka pri pridobivanju tekem:', err);
         setError('Napaka pri nalaganju tekem.');
@@ -22,9 +24,7 @@ export default function MatchFeed() {
   return (
     <section>
       <h2 className="text-xl font-bold mb-4 text-gray-800">Today's matches</h2>
-
       {error && <p className="text-red-500">{error}</p>}
-
       {matchesData.length > 0 ? (
         matchesData.map((league, leagueIdx) => (
           <div key={leagueIdx} className="mb-6">
@@ -35,7 +35,8 @@ export default function MatchFeed() {
                 return (
                   <div
                     key={matchIdx}
-                    className={`p-4 rounded-xl shadow-md hover:shadow-xl transition border-2 ${
+                    onClick={() => navigate(`/match/${match.match_id}`)} // ⬅️ Novo
+                    className={`p-4 rounded-xl shadow-md hover:shadow-xl transition border-2 cursor-pointer ${
                       isLive ? 'border-red-500 bg-yellow-200' : 'border-emerald-300 bg-stone-200'
                     } flex items-center justify-between gap-4`}
                   >

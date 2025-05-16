@@ -1,8 +1,9 @@
-import './App.css'
+import './App.css';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Home from './pages/Home';
 import Fantasy from './pages/Fantasy';
 import Navbar from './components/Navbar';
+import MatchDetail from './components/Home/MatchDetail';
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/fantasy" element={<Fantasy />} />
+            <Route path="/match/:matchId" element={<MatchDetail />} />
           </Routes>
         </main>
       </div>
@@ -20,4 +22,4 @@ function App() {
   );
 }
 
-export default App
+export default App;
