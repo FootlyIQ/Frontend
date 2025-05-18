@@ -2,6 +2,7 @@ import './App.css';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Home from './pages/Home';
 import Fantasy from './pages/Fantasy';
+import ClubPage from './pages/ClubPage';
 import Navbar from './components/Navbar';
 import MatchDetail from './components/Home/MatchDetail';
 
@@ -15,6 +16,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/fantasy" element={<Fantasy />} />
             <Route path="/match/:matchId" element={<MatchDetail />} />
+            <Route path="/team/:teamId" element={<ClubPage />} />
           </Routes>
         </main>
       </div>

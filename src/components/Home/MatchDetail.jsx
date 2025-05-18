@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 export default function MatchDetail() {
   const { matchId } = useParams();
   const [matchData, setMatchData] = useState(null);
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('overview'); // state za zavihek
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchMatchDetails = async () => {
@@ -14,12 +16,17 @@ export default function MatchDetail() {
         const response = await axios.get(`http://127.0.0.1:5000/match-statistics/${matchId}`);
         setMatchData(response.data);
       } catch (err) {
-        console.error('Napaka pri nalaganju podrobnosti tekme:', err);
-        setError('Napaka pri pridobivanju podrobnosti.');
+        console.error('Error at loading games:', err);
+        setError('Error at loading details.');
       }
     };
 
     fetchMatchDetails();
+    // ⏱️ Osvežuj vsakih 4 sekunde (4000 ms)
+    const interval = setInterval(fetchMatchDetails, 5000);
+
+    // Počisti interval ob unmountu
+    return () => clearInterval(interval);
   }, [matchId]);
 
   if (error) return <p className="text-red-500">{error}</p>;
@@ -33,13 +40,17 @@ export default function MatchDetail() {
         <img
           src={homeTeam.crest}
           alt={`${homeTeam.name} logo`}
-          className="w-10 h-10 object-contain"
+          className="w-10 h-10 object-contain cursor-pointer"
+          onClick={() => navigate(`/team/${homeTeam.id}`)} // <- tukaj dodano
+          title={`Go to ${homeTeam.name} page`} // opcijsko tooltip
         />
         {homeTeam.name} <span>vs</span>
         <img
           src={awayTeam.crest}
           alt={`${awayTeam.name} logo`}
-          className="w-10 h-10 object-contain"
+          className="w-10 h-10 object-contain cursor-pointer"
+          onClick={() => navigate(`/team/${awayTeam.id}`)} // <- tukaj dodano
+          title={`Go to ${awayTeam.name} page`} // opcijsko tooltip
         />
         {awayTeam.name}
       </h2>
