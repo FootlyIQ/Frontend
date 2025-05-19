@@ -1,5 +1,7 @@
 import Rabona from 'rabonajs';
 import { useEffect, useState } from 'react';
+import * as d3 from "d3";
+import FootballPitch from './FootballPitch';
 
 export default function PassClustering() {
     const [pitch, setPitch] = useState(null);
@@ -51,11 +53,11 @@ export default function PassClustering() {
                         endX: pass.end_x,
                         endY: pass.end_y,
                         length: pass.pass_length,
-                        angle: null,
+                        //angle: pass.angle,
                     }));
 
                     Rabona.layer({
-                        type: 'pass',
+                        type: 'arrow',
                         data: clusterPasses,
                         options: {
                             colour: clusterColorMap[label],
@@ -75,7 +77,9 @@ export default function PassClustering() {
 
     return (
         <>
-        <div id="pitch" style={{ width: '800px', height: '500px', margin: 'auto' }}/>
+        <FootballPitch />
         </>
     );
 }
+
+//<div id="pitch" style={{ width: '800px', height: '500px', margin: 'auto' }}/>
