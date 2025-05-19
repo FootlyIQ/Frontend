@@ -4,6 +4,7 @@ import Home from './pages/Home';
 import Fantasy from './pages/Fantasy';
 import Navbar from './components/Navbar';
 import Profile from './pages/Profile';
+import AnalysisHub from './pages/AnalysisHub';
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/fantasy" element={<Fantasy />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/analysis" element={<AnalysisHub />} />
           </Routes>
         </main>
       </div>

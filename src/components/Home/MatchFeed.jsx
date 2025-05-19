@@ -29,10 +29,6 @@ export default function MatchFeed() {
             </div>
           ))}
         </div>
-        <div>
-          <h3>Test:</h3>
-          <p>{message}</p>
-        </div>
       </section>
     );
 }
