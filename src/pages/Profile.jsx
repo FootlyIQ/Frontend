@@ -1,23 +1,39 @@
 import { useState, useEffect } from "react";
 import { auth, db } from "../firebaseConfig";
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
-import { doc, setDoc } from "firebase/firestore";
+import { 
+    createUserWithEmailAndPassword, 
+    signInWithEmailAndPassword, 
+    signOut, 
+    onAuthStateChanged, 
+    GoogleAuthProvider, 
+    signInWithPopup 
+} from "firebase/auth";
+import { doc, setDoc, getDoc } from "firebase/firestore";
 
 export default function Profile() {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [user, setUser] = useState(null);
     const [form, setForm] = useState({ email: "", password: "", name: "" });
     const [isRegistering, setIsRegistering] = useState(false);
+    const [teamId, setTeamId] = useState("");
 
     // Preveri stanje prijave ob nalaganju strani
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+        const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
             if (currentUser) {
                 setIsLoggedIn(true);
                 setUser(currentUser);
+
+                // Pridobi Fantasy Team ID iz Firestore
+                const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+                if (userDoc.exists()) {
+                    const data = userDoc.data();
+                    setTeamId(data.teamId || "");
+                }
             } else {
                 setIsLoggedIn(false);
                 setUser(null);
+                setTeamId("");
             }
         });
 
@@ -94,10 +110,27 @@ export default function Profile() {
             setIsLoggedIn(false);
             setUser(null);
             setForm({ email: "", password: "", name: "" });
+            setTeamId("");
             alert("Logged out successfully!");
         } catch (error) {
             console.error("Error during logout:", error.message);
             alert(error.message);
+        }
+    };
+
+    // Shrani Fantasy Team ID v Firestore
+    const saveTeamIdToFirestore = async () => {
+        try {
+            if (!user) {
+                alert("You must be logged in to save your Fantasy Team ID.");
+                return;
+            }
+
+            await setDoc(doc(db, "users", user.uid), { teamId }, { merge: true });
+            alert("Fantasy Team ID saved successfully!");
+        } catch (error) {
+            console.error("Error saving Fantasy Team ID:", error.message);
+            alert("Failed to save Fantasy Team ID.");
         }
     };
 
@@ -164,9 +197,24 @@ export default function Profile() {
             ) : (
                 <div className="max-w-md w-full bg-gray-800 p-6 rounded shadow-lg">
                     <h2 className="text-2xl font-bold mb-4 text-center">Welcome, {user.email}</h2>
+                    <div className="mb-4">
+                        <label className="block text-sm font-medium mb-1">Fantasy Team ID</label>
+                        <input
+                            type="text"
+                            value={teamId}
+                            onChange={(e) => setTeamId(e.target.value)}
+                            className="w-full p-2 border rounded bg-gray-700 text-gray-100"
+                        />
+                    </div>
+                    <button
+                        onClick={saveTeamIdToFirestore}
+                        className="w-full bg-green-500 hover:bg-green-600 text-white p-2 rounded"
+                    >
+                        Save Fantasy Team ID
+                    </button>
                     <button
                         onClick={handleLogout}
-                        className="w-full bg-red-500 hover:bg-red-600 text-white p-2 rounded"
+                        className="w-full bg-red-500 hover:bg-red-600 text-white p-2 rounded mt-4"
                     >
                         Logout
                     </button>
