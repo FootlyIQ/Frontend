@@ -1,6 +1,3 @@
-import Rabona from 'rabonajs';
-import { useEffect, useState } from 'react';
-import * as d3 from "d3";
 import FootballPitch from './FootballPitch';
 
 export default function PassClustering() {

@@ -3,7 +3,7 @@ import * as d3 from "d3";
 import clusterDescriptions from "./cluster_descriptions.json";
 import lastThirdDesc from "./last_third_desc.json";
 
-const FootballPitch = ({ width = 750, height = 485 }) => {
+const FootballPitch = ({ width = 700, height = 453 }) => {
     const [passes, setPasses] = useState([]);
     const [descriptions, setDescriptions] = useState({});
     const [selectedTeam, setSelectedTeam] = useState("Arsenal");
@@ -243,7 +243,7 @@ const FootballPitch = ({ width = 750, height = 485 }) => {
                 )}
             </section>
 
-            <aside className="hidden lg:block w-80 bg-slate-500 p-6">
+            <aside className="hidden lg:block w-80 bg-slate-700 p-6">
                 <label htmlFor="team-select">Select Team:</label>
                 <select
                     id="team-select"
