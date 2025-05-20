@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import * as d3 from "d3";
 import clusterDescriptions from "./cluster_descriptions.json";
+import lastThirdDesc from "./last_third_desc.json";
 
 const FootballPitch = ({ width = 750, height = 485 }) => {
     const [passes, setPasses] = useState([]);
@@ -36,6 +37,16 @@ const FootballPitch = ({ width = 750, height = 485 }) => {
             .then(data => {
                 setPasses(data);
                 setDescriptions(clusterDescriptions); // set only after successful fetch
+            })
+            .catch(err => console.error("Error fetching passes:", err));
+    };
+
+    const fetchLastThirdPasses = () => {
+        fetch(`http://127.0.0.1:5000/api/passes/last-third?team_name=${encodeURIComponent(selectedTeam)}`)
+            .then(res => res.json())
+            .then(data => {
+                setPasses(data);
+                setDescriptions(lastThirdDesc); // set only after successful fetch
             })
             .catch(err => console.error("Error fetching passes:", err));
     };
@@ -225,6 +236,9 @@ const FootballPitch = ({ width = 750, height = 485 }) => {
                 </select>
                 <button onClick={fetchPasses} className="bg-white text-black px-4 py-2 rounded hover:bg-gray-200 transition">
                     Show Most Common Passes
+                </button>
+                <button onClick={fetchLastThirdPasses} className="bg-white text-black px-4 py-2 rounded hover:bg-gray-200 transition">
+                    Show Last 3rd Passes
                 </button>
             </aside>
         </div>
