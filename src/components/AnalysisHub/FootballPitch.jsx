@@ -1,23 +1,30 @@
 import React, { useEffect, useState } from "react";
 import * as d3 from "d3";
+import clusterDescriptions from "./cluster_descriptions.json";
 
-const FootballPitch = ({ width = 800, height = 520 }) => {
+const FootballPitch = ({ width = 800, height = 518 }) => {
     const [passes, setPasses] = useState([]);
     const [descriptions, setDescriptions] = useState({});
-
+/*
     useEffect(() => {
         d3.csv("/cluster_descriptions.csv").then(data => {
+            console.log("Raw CSV data:", data);
             const descMap = {};
             data.forEach(d => {
-                descMap[parseInt(d.cluster_label) - 1] = d.description; // -1 for 0-based backend
+                descMap[parseInt(d.label) - 1] = d.desc; // -1 for 0-based backend
             });
-            console.log(descMap);
+            console.log("descMap:", descMap);
             setDescriptions(descMap);
         });
     }, []);
+*/
+    //console.log(clusterDescriptions[0]);
+    useEffect(() => {
+        setDescriptions(clusterDescriptions);   //trenutno se za loading opisov uporablja ta pristop - je bolj efficient
+    }, []);
 
     useEffect(() => {
-        fetch("http://127.0.0.1:5000/api/passes/last-third/most-common?team_name=Arsenal")
+        fetch("http://127.0.0.1:5000/api/passes/most-common?team_name=Arsenal")
         .then(res => res.json())
         .then(data => setPasses(data))
         .catch(err => console.error("Error fetching passes:", err));
