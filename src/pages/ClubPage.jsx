@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 
 function ClubPage() {
   const { teamId } = useParams();
+  const navigate = useNavigate();
 
   const [fixtures, setFixtures] = useState([]);
   const [squad, setSquad] = useState([]);
@@ -46,6 +47,16 @@ function ClubPage() {
     fetchClubData();
   }, [teamId]);
 
+  // Helper function to format stage string nicely: "REGULAR_SEASON" -> "Regular Season"
+  const formatStage = (stage) => {
+    if (!stage) return '';
+    return stage
+      .toLowerCase()
+      .split('_')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+
   // Style objects for tabs (buttons)
   const tabButtonStyle = {
     flex: 1,
@@ -73,10 +84,12 @@ function ClubPage() {
   return (
     <div
       style={{
-        maxWidth: 700,
         margin: '2rem auto',
         padding: '1rem',
         fontFamily: 'Arial, sans-serif',
+        width: '100%',
+        maxWidth: '1200px', // ali več, po potrebi
+        boxSizing: 'border-box',
       }}
     >
       <div
@@ -85,7 +98,7 @@ function ClubPage() {
           alignItems: 'center',
           justifyContent: 'center',
           marginBottom: '1.5rem',
-          gap: '1rem', // razmik med logo in imenom
+          gap: '1rem', // spacing between logo and team name
         }}
       >
         {teamCrest && (
@@ -145,6 +158,10 @@ function ClubPage() {
               padding: '1.5rem',
               borderRadius: '12px',
               boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+              width: '100%',
+              maxWidth: '1200px',
+              margin: '0 auto',
+              boxSizing: 'border-box',
             }}
           >
             {activeTab === 'fixtures' ? (
@@ -155,28 +172,151 @@ function ClubPage() {
                     {fixtures.map((match, idx) => (
                       <li
                         key={idx}
-                        style={{ padding: '0.75rem 1rem', borderBottom: '1px solid #ddd' }}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'flex-start',
+                          padding: '1rem',
+                          borderBottom: '1px solid #ccc',
+                          gap: '1rem',
+                          width: '100%',
+                          boxSizing: 'border-box',
+                          flexWrap: 'wrap',
+                          position: 'relative',
+                        }}
                       >
-                        <strong>{match.date}</strong> — {match.home_team} vs {match.away_team} (
-                        {match.score})
+                        {/* Gumb vedno na levi strani */}
+                        <div style={{ position: 'absolute', left: '-100px' }}>
+                          <button
+                            style={{
+                              padding: '0.4rem 0.8rem',
+                              borderRadius: '8px',
+                              backgroundColor: '#007bff',
+                              color: '#fff',
+                              border: 'none',
+                              cursor: 'pointer',
+                            }}
+                            onClick={() => navigate(`/match/${match.match_id}`)}
+                          >
+                            More info
+                          </button>
+                        </div>
+
+                        {/* Datum */}
+                        <div style={{ minWidth: 80, flexShrink: 0 }}>
+                          <strong>{match.date}</strong>
+                        </div>
+
+                        {/* Ekipe + rezultat */}
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            flexGrow: 2,
+                            flexBasis: '50%',
+                            overflow: 'hidden',
+                            flexWrap: 'nowrap',
+                          }}
+                        >
+                          <img src={match.home_crest} alt="" style={{ height: 30 }} />
+                          <span style={{ fontWeight: 500 }}>{match.home_team}</span>
+                          <strong style={{ minWidth: 40, textAlign: 'center' }}>
+                            {match.score}
+                          </strong>
+                          <span style={{ fontWeight: 500 }}>{match.away_team}</span>
+                          <img src={match.away_crest} alt="" style={{ height: 30 }} />
+                        </div>
+
+                        {/* Liga info */}
+                        <div
+                          style={{
+                            display: 'flex',
+                            width: '25%',
+                            marginRight: '5.5rem',
+                          }}
+                        >
+                          <div style={{ flexBasis: '8%', minWidth: 80, fontSize: '0.85rem' }}>
+                            <div>
+                              <strong>Matchday:</strong> {match.matchday || 'N/A'}
+                            </div>
+                            <div>{formatStage(match.stage)}</div>
+                          </div>
+
+                          <div
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              flexGrow: 1,
+                              minWidth: 100,
+                              gap: '0.25rem',
+                            }}
+                          >
+                            {match.competition_logo && (
+                              <img src={match.competition_logo} alt="" style={{ height: 30 }} />
+                            )}
+                            <span
+                              style={{
+                                fontWeight: 'bold',
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                              }}
+                            >
+                              {match.competition_name}
+                            </span>
+                          </div>
+                        </div>
                       </li>
                     ))}
                   </ul>
                 ) : (
-                  <p>No matches to display.</p>
+                  <p>No matches available.</p>
                 )}
               </>
             ) : (
               <>
-                <h3 style={{ marginBottom: '1rem' }}>Squad</h3>
+                <h3 style={{ marginBottom: '1rem' }}>Squad Members</h3>
                 {squad.length > 0 ? (
                   <ul style={{ listStyle: 'none', padding: 0 }}>
                     {squad.map((player, idx) => (
                       <li
                         key={idx}
-                        style={{ padding: '0.75rem 1rem', borderBottom: '1px solid #ddd' }}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'flex-start',
+                          padding: '1rem',
+                          borderBottom: '1px solid #ccc',
+                          gap: '1rem',
+                          width: '100%',
+                          boxSizing: 'border-box',
+                          position: 'relative',
+                        }}
                       >
-                        {player.name} ({player.position}) — {player.nationality}
+                        {/* Gumb na levi*/}
+                        <div style={{ position: 'absolute', left: '-100px' }}>
+                          <button
+                            style={{
+                              padding: '0.4rem 0.8rem',
+                              borderRadius: '8px',
+                              backgroundColor: '#28a745',
+                              color: '#fff',
+                              border: 'none',
+                              cursor: 'pointer',
+                            }}
+                            onClick={() => alert(`You clicked on ${player.name}`)}
+                          >
+                            Info
+                          </button>
+                        </div>
+
+                        {/* Info o igralcu */}
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                          <strong>{player.name}</strong>
+                          <span>Position: {player.position}</span>
+                          <span>Nationality: {player.nationality}</span>
+                        </div>
                       </li>
                     ))}
                   </ul>
