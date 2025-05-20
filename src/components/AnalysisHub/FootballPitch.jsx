@@ -7,6 +7,10 @@ const FootballPitch = ({ width = 750, height = 485 }) => {
     const [passes, setPasses] = useState([]);
     const [descriptions, setDescriptions] = useState({});
     const [selectedTeam, setSelectedTeam] = useState("Arsenal");
+    const [isSuccessful, setIsSuccessful] = useState(false);
+    const [isHighPass, setIsHighPass] = useState(false);
+    const [isLongPass, setIsLongPass] = useState(false);
+    const [minPassLength, setMinPassLength] = useState("");
 
 /*
     useEffect(() => {
@@ -51,10 +55,27 @@ const FootballPitch = ({ width = 750, height = 485 }) => {
             .catch(err => console.error("Error fetching passes:", err));
     };
 
+    const fetchFilteredPasses = () => {
+        const params = new URLSearchParams();
+        params.append("team_name", selectedTeam);
+        (isSuccessful) ? params.append("successful", "true") : params.append("successful", "false");
+        (isHighPass) ? params.append("pass_high", "true") : params.append("pass_high", "false");
+        (isLongPass) ? params.append("long_pass", "true") : params.append("long_pass", "false");
+        if (minPassLength) params.append("pass_length", minPassLength);
+
+        fetch(`http://127.0.0.1:5000/api/passes/filters?${params.toString()}`)
+        .then(res => res.json())
+        .then(data => {
+            setPasses(data);
+            setDescriptions(clusterDescriptions);
+        })
+        .catch(err => console.error("Error fetching filtered data:", err));
+    };
+
     return (
         <div className="flex flex-col lg:flex-row min-h-screen gap-5">
             <section>
-                <svg width={width} height={height} style={{ backgroundColor: "#2e7d32" }}>
+                <svg width={width} height={height} style={{ backgroundColor: "#222222", opacity: "0.6" }}>  {/* zelena barva: 2e7d32 */}
                     {/* Outer pitch */}
                     <rect
                         x={xScale(0)}
@@ -231,14 +252,80 @@ const FootballPitch = ({ width = 750, height = 485 }) => {
                     style={{ marginLeft: "10px", padding: "5px" }}
                 >
                     <option value="Arsenal">Arsenal</option>
+                    <option value="Aston Villa">Aston Villa</option>
+                    <option value="Bournemouth">Bournemouth</option>
+                    <option value="Brentford">Brentford</option>
+                    <option value="Brighton">Brighton</option>
+                    <option value="Burnley">Burnley</option>
                     <option value="Chelsea">Chelsea</option>
+                    <option value="Crystal Palace">Crystal Palace</option>
+                    <option value="Everton">Everton</option>
+                    <option value="Fulham">Fulham</option>
+                    <option value="Leeds United">Leeds United</option>
+                    <option value="Leicester City">Leicester City</option>
                     <option value="Liverpool">Liverpool</option>
+                    <option value="Manchester City">Manchester City</option>
+                    <option value="Manchester United">Manchester United</option>
+                    <option value="Newcastle United">Newcastle United</option>
+                    <option value="Nottingham Forest">Nottingham Forest</option>
+                    <option value="Sheffield United">Sheffield United</option>
+                    <option value="Southampton">Southampton</option>
+                    <option value="Tottenham Hotspur">Tottenham Hotspur</option>
+                    <option value="Watford">Watford</option>
+                    <option value="West Ham United">West Ham United</option>
+                    <option value="Wolverhampton Wanderers">Wolverhampton</option>
                 </select>
                 <button onClick={fetchPasses} className="bg-white text-black px-4 py-2 rounded hover:bg-gray-200 transition">
                     Show Most Common Passes
                 </button>
                 <button onClick={fetchLastThirdPasses} className="bg-white text-black px-4 py-2 rounded hover:bg-gray-200 transition">
                     Show Last 3rd Passes
+                </button>
+
+                {/*filtering*/}
+                <div className="mt-4">
+                    <label className="block">
+                        <input
+                            type="checkbox"
+                            checked={isSuccessful}
+                            onChange={(e) => setIsSuccessful(e.target.checked)}
+                            className="mr-2"
+                        />
+                        Successful Pass
+                    </label>
+
+                    <label className="block mt-2">
+                        <input
+                            type="checkbox"
+                            checked={isHighPass}
+                            onChange={(e) => setIsHighPass(e.target.checked)}
+                            className="mr-2"
+                        />
+                        High Pass
+                    </label>
+
+                    <label className="block mt-2">
+                        <input
+                            type="checkbox"
+                            checked={isLongPass}
+                            onChange={(e) => setIsLongPass(e.target.checked)}
+                            className="mr-2"
+                        />
+                        Long Pass
+                    </label>
+
+                    <label className="block mt-4">
+                        Min Pass Length:
+                        <input
+                            type="number"
+                            value={minPassLength}
+                            onChange={(e) => setMinPassLength(e.target.value)}
+                            className="block mt-1 w-full p-1 text-black"
+                        />
+                    </label>
+                </div>
+                <button onClick={fetchFilteredPasses} className="bg-white text-black px-4 py-2 rounded hover:bg-gray-200 transition">
+                    Apply Filters
                 </button>
             </aside>
         </div>
