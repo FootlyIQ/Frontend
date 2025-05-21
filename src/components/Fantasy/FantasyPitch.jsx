@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { db } from "../../firebaseConfig";
 import { doc, getDoc } from "firebase/firestore";
@@ -20,19 +21,19 @@ export default function FantasyPitch() {
   const [totalPoints, setTotalPoints] = useState(0);
   const [loading, setLoading] = useState(false);
   const [gameweek, setGameweek] = useState(36);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        console.log("User ID:", user.uid);
-        fetchTeamIdFromFirestore(user.uid); // Posreduj user.uid
+        fetchTeamIdFromFirestore(user.uid);
       } else {
-        console.log("No user is signed in.");
+        navigate("/login"); // Preusmeri na stran za prijavo
       }
     });
 
-    return () => unsubscribe(); // Počisti poslušalca ob unmountu
-  }, []);
+    return () => unsubscribe();
+  }, [navigate]);
 
   const fetchTeamIdFromFirestore = async (uid) => {
     try {
