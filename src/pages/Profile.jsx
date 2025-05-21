@@ -37,7 +37,6 @@ export default function Profile() {
             }
         });
 
-        // Počisti poslušalca ob unmountu komponente
         return () => unsubscribe();
     }, []);
 
@@ -47,15 +46,13 @@ export default function Profile() {
 
     const handleRegister = async () => {
         try {
-            // Ustvari uporabnika v Firebase Authentication
             const userCredential = await createUserWithEmailAndPassword(auth, form.email, form.password);
             const newUser = userCredential.user;
 
-            // Shrani uporabnika v Firestore
             await setDoc(doc(db, "users", newUser.uid), {
                 name: form.name,
                 email: form.email,
-                role: "user", // Privzeta vloga
+                role: "user",
                 createdAt: new Date().toISOString()
             });
 
@@ -86,12 +83,11 @@ export default function Profile() {
             const result = await signInWithPopup(auth, provider);
             const newUser = result.user;
 
-            // Shrani uporabnika v Firestore, če še ne obstaja
             const userDocRef = doc(db, "users", newUser.uid);
             await setDoc(userDocRef, {
                 name: newUser.displayName || "Google User",
                 email: newUser.email,
-                role: "user", // Privzeta vloga
+                role: "user",
                 createdAt: new Date().toISOString()
             }, { merge: true });
 
@@ -118,7 +114,6 @@ export default function Profile() {
         }
     };
 
-    // Shrani Fantasy Team ID v Firestore
     const saveTeamIdToFirestore = async () => {
         try {
             if (!user) {
@@ -210,7 +205,7 @@ export default function Profile() {
                         onClick={saveTeamIdToFirestore}
                         className="w-full bg-green-500 hover:bg-green-600 text-white p-2 rounded"
                     >
-                        Save Fantasy Team ID
+                        {teamId ? "Update Fantasy Team ID" : "Save Fantasy Team ID"}
                     </button>
                     <button
                         onClick={handleLogout}
