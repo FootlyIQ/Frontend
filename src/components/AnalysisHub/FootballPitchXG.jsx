@@ -3,7 +3,9 @@ import * as d3 from "d3";
 
 
 const FootballPitchXG = ({ width = 700, height = 453 }) => {
-    const [selectedTeam, setSelectedTeam] = useState("Arsenal");
+    const [selectedTeam, setSelectedTeam] = useState("Fulham");    //lahko je blank
+    const [heatmapData, setHeatmapData] = useState([]);
+    const [loading, setLoading] = useState(false);
     
     const pitchWidth = 105; // meters
     const pitchHeight = 68;
@@ -12,6 +14,31 @@ const FootballPitchXG = ({ width = 700, height = 453 }) => {
     const yScale = d3.scaleLinear().domain([0, pitchHeight]).range([0, height]);
     const colorScale = d3.scaleOrdinal(d3.schemeCategory10);
 
+    /**
+     useEffect(() => {
+        fetch(`/api/xG/heatmap?team_name=${selectedTeam}`)
+            .then(res => res.json())
+            .then(data => {
+                setHeatmapData(data);
+            })
+            .catch(err => console.error(err));
+    }, [selectedTeam]);
+     */
+    
+    const fetchHeatmap = () => {
+        setLoading(true);
+        setHeatmapData([]); //clear the previous render
+        fetch(`http://127.0.0.1:5000/api/xG/heatmap?team_name=${encodeURIComponent(selectedTeam)}`)
+            .then(res => res.json())
+            .then(data => {
+                setHeatmapData(data);
+                setLoading(false);
+            })
+            .catch(err => {
+                console.error("Error fetching heatmap:", err);
+                setLoading(false);
+            });
+    }
 
     return (
         <div className="flex flex-col lg:flex-row min-h-screen gap-5">
@@ -137,12 +164,52 @@ const FootballPitchXG = ({ width = 700, height = 453 }) => {
                     />
 
 
-                    {/* Conditionally render passes and marker */}
+                    {/* Conditionally render xG */}
+                    {/*
+                        {loading ? (
+                            <p className="text-2xl font-bold text-emerald-500">Loading heatmap...</p>
+                        ) : (
+                            heatmapData.length > 0 && (
+                            <>
+                                {heatmapData.map((d, i) => (
+                                    <rect
+                                        key={i}
+                                        x={xScale(d.x - (105 / 11) / 2)}  // center the bin
+                                        y={yScale(d.y - (68 / 11) / 2)}   // because y increases downward in SVG
+                                        width={xScale(105 / 11) - xScale(0)}
+                                        //height={yScale(0) + yScale(68 / 11)}
+                                        height={yScale(68/11) - yScale(0)}
+                                        fill={d3.interpolateReds(d.xG / 0.3)}  // normalize assuming max xG ~ 0.3
+                                        opacity={0.5}
+                                    />
+                                    
+                                ))}
+                            </>
+                        )
+                        )}
+                    */}
+
+                    {/* Render Heatmap if not loading */}
+                    {!loading && heatmapData.length > 0 && heatmapData.map((d, i) => (
+                        <rect
+                            key={i}
+                            x={xScale(d.x - (pitchWidth / 11) / 2)}
+                            y={yScale(d.y - (pitchHeight / 11) / 2)}
+                            width={xScale(pitchWidth / 11) - xScale(0)}
+                            height={yScale(pitchHeight / 11) - yScale(0)}
+                            fill={d3.interpolateReds(d.xG / 0.3)}
+                            opacity={0.5}
+                        />
+                    ))}
                     
                 </svg>
 
                 {/* Conditionally render legend */}
-                
+
+                {/* Loading Message OUTSIDE SVG */}
+                {loading && (
+                    <p className="text-2xl font-bold text-emerald-500 mt-4">Loading heatmap...</p>
+                )}
             </section>
 
             <aside className="hidden lg:block w-80 bg-slate-700 p-6">
@@ -177,7 +244,9 @@ const FootballPitchXG = ({ width = 700, height = 453 }) => {
                     <option value="West Ham United">West Ham United</option>
                     <option value="Wolverhampton Wanderers">Wolverhampton</option>
                 </select>
-                
+                <button onClick={fetchHeatmap} className="bg-white text-black px-4 py-2 rounded hover:bg-gray-200 transition">
+                    Show xG Map
+                </button>
             </aside>
         </div>
     );
