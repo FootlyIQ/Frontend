@@ -294,23 +294,23 @@ function ClubPage() {
                           position: 'relative',
                         }}
                       >
-                        {/* Gumb na levi*/}
                         <div style={{ position: 'absolute', left: '-100px' }}>
-                          <button
-                            style={{
-                              padding: '0.4rem 0.8rem',
-                              borderRadius: '8px',
-                              backgroundColor: '#28a745',
-                              color: '#fff',
-                              border: 'none',
-                              cursor: 'pointer',
-                            }}
-                            onClick={() => alert(`You clicked on ${player.name}`)}
-                          >
-                            Info
-                          </button>
+                          {player.id && ( // Only show button if player has an ID
+                            <button
+                              style={{
+                                padding: '0.4rem 0.8rem',
+                                borderRadius: '8px',
+                                backgroundColor: '#28a745',
+                                color: '#fff',
+                                border: 'none',
+                                cursor: 'pointer',
+                              }}
+                              onClick={() => navigate(`/player/${player.id}`)}
+                            >
+                              Info
+                            </button>
+                          )}
                         </div>
-
                         {/* Info o igralcu */}
                         <div style={{ display: 'flex', flexDirection: 'column' }}>
                           <strong>{player.name}</strong>

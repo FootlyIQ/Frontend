@@ -6,6 +6,7 @@ import ClubPage from './pages/ClubPage';
 import Navbar from './components/Navbar';
 import Profile from './pages/Profile';
 import MatchDetail from './components/Home/MatchDetail';
+import PlayerPage from './pages/PlayerPage';
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
             <Route path="/profile" element={<Profile />} />
             <Route path="/match/:matchId" element={<MatchDetail />} />
             <Route path="/team/:teamId" element={<ClubPage />} />
+            <Route path="/player/:playerId" element={<PlayerPage />} />
           </Routes>
         </main>
       </div>
