@@ -5,12 +5,15 @@ import axios from 'axios';
 export default function MatchFeed() {
   const [matchesData, setMatchesData] = useState([]);
   const [error, setError] = useState('');
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]); // Format: YYYY-MM-DD
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchMatches = async () => {
       try {
-        const response = await axios.get('http://127.0.0.1:5000/matches');
+        const response = await axios.get(
+          `http://127.0.0.1:5000/matches${selectedDate ? `?date=${selectedDate}` : ''}`
+        );
         setMatchesData(response.data);
       } catch (err) {
         console.error('Napaka pri pridobivanju tekem:', err);
@@ -19,12 +22,36 @@ export default function MatchFeed() {
     };
 
     fetchMatches();
-  }, []);
+  }, [selectedDate]); // Re-fetch when date changes
+
+  const handleDateChange = (event) => {
+    setSelectedDate(event.target.value);
+  };
 
   return (
     <section>
-      <h2 className="text-xl font-bold mb-4 text-gray-800">Današnje tekme</h2>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-xl font-bold text-gray-800">
+          {selectedDate === new Date().toISOString().split('T')[0]
+            ? 'Današnje tekme'
+            : 'Izbrane tekme'}
+        </h2>
+        <div className="flex items-center gap-2">
+          <label htmlFor="date-picker" className="text-gray-700">
+            Izberi datum:
+          </label>
+          <input
+            id="date-picker"
+            type="date"
+            value={selectedDate}
+            onChange={handleDateChange}
+            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+      </div>
+
       {error && <p className="text-red-500">{error}</p>}
+
       {matchesData.length > 0 ? (
         matchesData.map((countryData, countryIdx) => (
           <div key={countryIdx} className="mb-10">
@@ -106,7 +133,7 @@ export default function MatchFeed() {
           </div>
         ))
       ) : (
-        <p>Loading matches...</p>
+        <p className="text-gray-600">Ni tekem za izbrani datum.</p>
       )}
     </section>
   );
