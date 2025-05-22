@@ -14,17 +14,7 @@ const FootballPitchXG = ({ width = 700, height = 453 }) => {
     const yScale = d3.scaleLinear().domain([0, pitchHeight]).range([0, height]);
     const colorScale = d3.scaleOrdinal(d3.schemeCategory10);
 
-    /**
-     useEffect(() => {
-        fetch(`/api/xG/heatmap?team_name=${selectedTeam}`)
-            .then(res => res.json())
-            .then(data => {
-                setHeatmapData(data);
-            })
-            .catch(err => console.error(err));
-    }, [selectedTeam]);
-     */
-    
+    /*
     const fetchHeatmap = () => {
         setLoading(true);
         setHeatmapData([]); //clear the previous render
@@ -39,6 +29,33 @@ const FootballPitchXG = ({ width = 700, height = 453 }) => {
                 setLoading(false);
             });
     }
+    */
+
+    const fetchHeatmap = () => {
+        setLoading(true);
+        setHeatmapData([]); // Clear previous render
+
+        const fetchOnce = async () => {
+            const res = await fetch(`http://127.0.0.1:5000/api/xG/heatmap?team_name=${encodeURIComponent(selectedTeam)}`);
+            const data = await res.json();
+            setHeatmapData(data);
+        };
+
+        fetchOnce().then(() => {
+            // Simulate second click after short delay (e.g., 100ms)
+            setTimeout(() => {
+                fetchOnce().then(() => {
+                    setLoading(false);
+                });
+            }, 25);
+        }).catch(err => {
+            console.error("Error fetching heatmap:", err);
+            setLoading(false);
+        });
+    };
+
+    
+    
 
     return (
         <div className="flex flex-col lg:flex-row min-h-screen gap-5">
