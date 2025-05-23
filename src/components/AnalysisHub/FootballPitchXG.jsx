@@ -6,6 +6,8 @@ const FootballPitchXG = ({ width = 700, height = 453 }) => {
     const [selectedTeam, setSelectedTeam] = useState("Fulham");    //lahko je blank
     const [heatmapData, setHeatmapData] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0, value: null });
+    const [hoveredBin, setHoveredBin] = useState(null);
     
     const pitchWidth = 105; // meters
     const pitchHeight = 68;
@@ -215,13 +217,47 @@ const FootballPitchXG = ({ width = 700, height = 453 }) => {
                             width={xScale(pitchWidth / 11) - xScale(0)}
                             height={yScale(pitchHeight / 11) - yScale(0)}
                             fill={d3.interpolateReds(d.xG / 0.3)}
-                            opacity={0.5}
+                            opacity={hoveredBin === i ? 0.9 : 0.5}
+                            onMouseEnter={(e) => {
+                                setHoveredBin(i);
+                                setTooltip({
+                                    visible: true,
+                                    x: e.clientX,
+                                    y: e.clientY,
+                                    value: d.xG.toFixed(3),
+                                });
+                            }}
+                            onMouseMove={(e) => {
+                                setTooltip((prev) => ({
+                                    ...prev,
+                                    x: e.clientX,
+                                    y: e.clientY,
+                                }));
+                            }}
+                            onMouseLeave={() => {
+                                setHoveredBin(null);
+                                setTooltip({ visible: false, x: 0, y: 0, value: null });
+                            }}
                         />
                     ))}
                     
                 </svg>
 
-                {/* Conditionally render legend */}
+                {/* Tooltip */}
+                {tooltip.visible && (
+                    <div
+                        className="absolute bg-black text-white px-2 py-1 text-sm rounded"
+                        style={{
+                            left: tooltip.x + 10,
+                            top: tooltip.y - 10,
+                            pointerEvents: "none",
+                            zIndex: 10,
+                            whiteSpace: "nowrap",
+                        }}
+                    >
+                        xG: {tooltip.value}
+                    </div>
+                )}
 
                 {/* Loading Message OUTSIDE SVG */}
                 {loading && (
