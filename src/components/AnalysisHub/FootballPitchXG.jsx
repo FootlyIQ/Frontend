@@ -212,8 +212,9 @@ const FootballPitchXG = ({ width = 700, height = 453 }) => {
                     {!loading && heatmapData.length > 0 && heatmapData.map((d, i) => (
                         <rect
                             key={i}
-                            x={xScale(d.x - (pitchWidth / 11) / 2)}
+                            x={xScale((pitchWidth - d.x) - (pitchWidth / 11) / 2)}
                             y={yScale(d.y - (pitchHeight / 11) / 2)}
+                            //y={yScale(d.y - (pitchHeight / 11) / 2)}
                             width={xScale(pitchWidth / 11) - xScale(0)}
                             height={yScale(pitchHeight / 11) - yScale(0)}
                             fill={d3.interpolateReds(d.xG / 0.3)}

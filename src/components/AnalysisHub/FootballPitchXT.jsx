@@ -5,6 +5,8 @@ import * as d3 from "d3";
 const FootballPitchXT = ({ width = 700, height = 453 }) => {
     const [selectedTeam, setSelectedTeam] = useState("Arsenal");    //lahko je blank
     const [heatmapData, setHeatmapData] = useState(null);
+    const [shotsData, setShotsData] = useState(null);
+    const [probData, setProbData] = useState(null);
     const [loading, setLoading] = useState(false);
     const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0, content: "" });
     const [hoveredBin, setHoveredBin] = useState(null);
@@ -19,6 +21,8 @@ const FootballPitchXT = ({ width = 700, height = 453 }) => {
 
     const fetchMovingXT = () => {
         setLoading(true);
+        setShotsData(null);     //clear shots xT
+        setProbData(null);     //clear shot probability 
         fetch(`http://127.0.0.1:5000/api/xT/moving?team_name=${encodeURIComponent(selectedTeam)}`)
         .then(res => res.json())
         .then(data => {
@@ -28,6 +32,43 @@ const FootballPitchXT = ({ width = 700, height = 453 }) => {
             console.log(max);
             setMaxCount(max);
             setHeatmapData(data.counts);
+            setLoading(false);
+        })
+        .catch(err => {
+            console.error("Error fetching moving xT map:", err);
+            setLoading(false);
+        });
+    }
+
+    const fetchShotsXT = () => {
+        setLoading(true);
+        setHeatmapData(null);   //clear moving xT
+        setProbData(null);     //clear shot probability 
+        fetch(`http://127.0.0.1:5000/api/xT/shots?team_name=${encodeURIComponent(selectedTeam)}`)
+        .then(res => res.json())
+        .then(data => {
+            const counts = data.counts;
+            console.log(counts);
+            const max = Math.max(...counts.flat());
+            console.log(max);
+            setMaxCount(max);
+            setShotsData(data.counts);
+            setLoading(false);
+        })
+        .catch(err => {
+            console.error("Error fetching moving xT map:", err);
+            setLoading(false);
+        });
+    }
+
+    const fetchShotProb = () => {
+        setLoading(true);
+        setHeatmapData(null);   //clear moving xT
+        setShotsData(null);     //clear shots xT
+        fetch(`http://127.0.0.1:5000/api/xT/shot-probability?team_name=${encodeURIComponent(selectedTeam)}`)
+        .then(res => res.json())
+        .then(data => {
+            setProbData(data.probability);
             setLoading(false);
         })
         .catch(err => {
@@ -172,6 +213,7 @@ const FootballPitchXT = ({ width = 700, height = 453 }) => {
 
                         return heatmapData.map((row, i) =>
                             row.map((count, j) => {
+                                const numRows = 12;
                                 const cellWidth = pitchWidth / 16;
                                 const cellHeight = pitchHeight / 12;
                                 const counter = row[j];
@@ -181,11 +223,11 @@ const FootballPitchXT = ({ width = 700, height = 453 }) => {
                                     <rect
                                         key={`cell-${i}-${j}`}
                                         x={xScale(j * cellWidth)}
-                                        y={yScale(i * cellHeight)}
+                                        y={yScale((numRows -1 - i) * cellHeight)}
                                         width={xScale(cellWidth) - xScale(0)}
                                         height={yScale(cellHeight) - yScale(0)}
                                         fill={color}
-                                        opacity={hoveredBin?.i === i && hoveredBin?.j === j ? 1 : 0.6}
+                                        opacity={hoveredBin?.i === i && hoveredBin?.j === j ? 1 : 0.7}
                                         onMouseEnter={(e) => {
                                             setHoveredBin({ i, j });
                                             const percentage = maxCount > 0 ? ((counter / maxCount) * 100).toFixed(1) : "0";
@@ -208,6 +250,92 @@ const FootballPitchXT = ({ width = 700, height = 453 }) => {
                             })
                         );
                     })()}
+
+
+                    {/* Shots xT  Heatmap */}
+                    {shotsData && (() => {
+                        const flatCounts = shotsData.flat();
+                        const maxCount = d3.max(flatCounts);
+                        const colorScale = d3.scaleSequential()
+                            .domain([0, maxCount])
+                            .interpolator(d3.interpolateGreens);
+
+                        return shotsData.map((row, i) =>
+                            row.map((count, j) => {
+                                const numRows = 12;
+                                const cellWidth = pitchWidth / 16;
+                                const cellHeight = pitchHeight / 12;
+                                const counter = row[j];
+                                const color = colorScale(count);
+
+                                return (
+                                    <rect
+                                        key={`cell-${i}-${j}`}
+                                        x={xScale(j * cellWidth)}
+                                        y={yScale((numRows -1 - i) * cellHeight)}
+                                        width={xScale(cellWidth) - xScale(0)}
+                                        height={yScale(cellHeight) - yScale(0)}
+                                        fill={color}
+                                        opacity={hoveredBin?.i === i && hoveredBin?.j === j ? 1 : 0.7}
+                                        onMouseEnter={(e) => {
+                                            setHoveredBin({ i, j });
+                                            const percentage = maxCount > 0 ? ((counter / maxCount) * 100).toFixed(1) : "0";
+                                            setTooltip({
+                                                visible: true,
+                                                x: e.clientX,
+                                                y: e.clientY,
+                                                content: `${percentage}% of shots taken`,
+                                            });
+                                        }}
+                                        onMouseMove={(e) => {
+                                            setTooltip((prev) => ({ ...prev, x: e.clientX, y: e.clientY }));
+                                        }}
+                                        onMouseLeave={() => {
+                                            setHoveredBin(null);
+                                            setTooltip({ visible: false, x: 0, y: 0, content: "" });
+                                        }}
+                                    />
+                                );
+                            })
+                        );
+                    })()}
+
+                    {/* Shot Probability Heatmap */}
+                    {probData && probData.map((row, yIdx) =>
+                        row.map((value, xIdx) => {
+                            const binWidth = pitchWidth / 16;
+                            const binHeight = pitchHeight / 12;
+                            const isHovered = hoveredBin?.i === yIdx && hoveredBin?.j === xIdx;
+
+                            return (
+                                <rect
+                                    key={`${xIdx}-${yIdx}`}
+                                    x={xScale(xIdx * binWidth)}
+                                    y={yScale(pitchHeight - (yIdx + 1) * binHeight)}
+                                    width={xScale(binWidth) - xScale(0)}
+                                    height={yScale(binHeight) - yScale(0)}
+                                    fill={d3.interpolateBuPu(value)} 
+                                    opacity={isHovered ? 1 : 0.7}
+                                    onMouseEnter={(e) => {
+                                        setHoveredBin({ i: yIdx, j: xIdx });
+                                        setTooltip({
+                                            visible: true,
+                                            x: e.clientX,
+                                            y: e.clientY,
+                                            content: `${(value * 100).toFixed(1)}% shot probability`,
+                                        });
+                                    }}
+                                    onMouseMove={(e) => {
+                                        setTooltip((prev) => ({ ...prev, x: e.clientX, y: e.clientY }));
+                                    }}
+                                    onMouseLeave={() => {
+                                        setHoveredBin(null);
+                                        setTooltip({ visible: false, x: 0, y: 0, content: "" });
+                                    }}
+                                />
+                            );
+                        })
+                    )}
                 </svg>
 
                 {/* Tooltip */}
@@ -268,8 +396,16 @@ const FootballPitchXT = ({ width = 700, height = 453 }) => {
                     <option value="West Ham United">West Ham United</option>
                     <option value="Wolverhampton Wanderers">Wolverhampton</option>
                 </select>
-                <button onClick={fetchMovingXT} className="bg-white text-black px-4 py-2 rounded hover:bg-gray-200 transition">
+                <button onClick={fetchMovingXT} disabled={loading} className="bg-white text-black px-4 py-2 rounded hover:bg-gray-200 transition">
                     Show xT Map
+                </button>
+                <br />
+                <button onClick={fetchShotsXT} disabled={loading} className="bg-white text-black px-4 py-2 rounded hover:bg-gray-200 transition">
+                    Show Shots Map
+                </button>
+                <br />
+                <button onClick={fetchShotProb} disabled={loading} className="bg-white text-black px-4 py-2 rounded hover:bg-gray-200 transition">
+                    Show Shot Probability Map
                 </button>
             </aside>
         </div>

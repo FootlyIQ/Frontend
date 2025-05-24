@@ -11,20 +11,6 @@ const FootballPitch = ({ width = 700, height = 453 }) => {
     const [isHighPass, setIsHighPass] = useState(false);
     const [isLongPass, setIsLongPass] = useState(false);
     const [minPassLength, setMinPassLength] = useState("");
-
-/*
-    useEffect(() => {
-        d3.csv("/cluster_descriptions.csv").then(data => {
-            console.log("Raw CSV data:", data);
-            const descMap = {};
-            data.forEach(d => {
-                descMap[parseInt(d.label) - 1] = d.desc; // -1 for 0-based backend
-            });
-            console.log("descMap:", descMap);
-            setDescriptions(descMap);
-        });
-    }, []);
-*/
     
     const pitchWidth = 105; // meters
     const pitchHeight = 68;
