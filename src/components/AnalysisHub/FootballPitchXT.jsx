@@ -2,61 +2,14 @@ import React, { useEffect, useState } from "react";
 import * as d3 from "d3";
 
 
-const FootballPitchXG = ({ width = 700, height = 453 }) => {
+const FootballPitchXT = ({ width = 700, height = 453 }) => {
     const [selectedTeam, setSelectedTeam] = useState("Arsenal");    //lahko je blank
-    const [heatmapData, setHeatmapData] = useState([]);
-    const [loading, setLoading] = useState(false);
-    const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0, value: null });
-    const [hoveredBin, setHoveredBin] = useState(null);
-    
+
     const pitchWidth = 105; // meters
     const pitchHeight = 68;
-
+    
     const xScale = d3.scaleLinear().domain([0, pitchWidth]).range([0, width]);
     const yScale = d3.scaleLinear().domain([0, pitchHeight]).range([0, height]);
-    const colorScale = d3.scaleOrdinal(d3.schemeCategory10);
-
-    /*
-    const fetchHeatmap = () => {
-        setLoading(true);
-        setHeatmapData([]); //clear the previous render
-        fetch(`http://127.0.0.1:5000/api/xG/heatmap?team_name=${encodeURIComponent(selectedTeam)}`)
-            .then(res => res.json())
-            .then(data => {
-                setHeatmapData(data);
-                setLoading(false);
-            })
-            .catch(err => {
-                console.error("Error fetching heatmap:", err);
-                setLoading(false);
-            });
-    }
-    */
-
-    const fetchHeatmap = () => {
-        setLoading(true);
-        setHeatmapData([]); // Clear previous render
-
-        const fetchOnce = async () => {
-            const res = await fetch(`http://127.0.0.1:5000/api/xG/heatmap?team_name=${encodeURIComponent(selectedTeam)}`);
-            const data = await res.json();
-            setHeatmapData(data);
-        };
-
-        fetchOnce().then(() => {
-            // Simulate second click after short delay (e.g., 100ms)
-            setTimeout(() => {
-                fetchOnce().then(() => {
-                    setLoading(false);
-                });
-            }, 25);
-        }).catch(err => {
-            console.error("Error fetching heatmap:", err);
-            setLoading(false);
-        });
-    };
-
-    
     
 
     return (
@@ -181,88 +134,8 @@ const FootballPitchXG = ({ width = 700, height = 453 }) => {
                         stroke="white"
                         strokeWidth={8}
                     />
-
-
-                    {/* Conditionally render xG */}
-                    {/*
-                        {loading ? (
-                            <p className="text-2xl font-bold text-emerald-500">Loading heatmap...</p>
-                        ) : (
-                            heatmapData.length > 0 && (
-                            <>
-                                {heatmapData.map((d, i) => (
-                                    <rect
-                                        key={i}
-                                        x={xScale(d.x - (105 / 11) / 2)}  // center the bin
-                                        y={yScale(d.y - (68 / 11) / 2)}   // because y increases downward in SVG
-                                        width={xScale(105 / 11) - xScale(0)}
-                                        //height={yScale(0) + yScale(68 / 11)}
-                                        height={yScale(68/11) - yScale(0)}
-                                        fill={d3.interpolateReds(d.xG / 0.3)}  // normalize assuming max xG ~ 0.3
-                                        opacity={0.5}
-                                    />
-                                    
-                                ))}
-                            </>
-                        )
-                        )}
-                    */}
-
-                    {/* Render Heatmap if not loading */}
-                    {!loading && heatmapData.length > 0 && heatmapData.map((d, i) => (
-                        <rect
-                            key={i}
-                            x={xScale(d.x - (pitchWidth / 11) / 2)}
-                            y={yScale(d.y - (pitchHeight / 11) / 2)}
-                            width={xScale(pitchWidth / 11) - xScale(0)}
-                            height={yScale(pitchHeight / 11) - yScale(0)}
-                            fill={d3.interpolateReds(d.xG / 0.3)}
-                            opacity={hoveredBin === i ? 0.9 : 0.5}
-                            onMouseEnter={(e) => {
-                                setHoveredBin(i);
-                                setTooltip({
-                                    visible: true,
-                                    x: e.clientX,
-                                    y: e.clientY,
-                                    value: d.xG.toFixed(3),
-                                });
-                            }}
-                            onMouseMove={(e) => {
-                                setTooltip((prev) => ({
-                                    ...prev,
-                                    x: e.clientX,
-                                    y: e.clientY,
-                                }));
-                            }}
-                            onMouseLeave={() => {
-                                setHoveredBin(null);
-                                setTooltip({ visible: false, x: 0, y: 0, value: null });
-                            }}
-                        />
-                    ))}
-                    
                 </svg>
 
-                {/* Tooltip */}
-                {tooltip.visible && (
-                    <div
-                        className="absolute bg-black text-white px-2 py-1 text-sm rounded"
-                        style={{
-                            left: tooltip.x + 10,
-                            top: tooltip.y - 10,
-                            pointerEvents: "none",
-                            zIndex: 10,
-                            whiteSpace: "nowrap",
-                        }}
-                    >
-                        xG: {tooltip.value}
-                    </div>
-                )}
-
-                {/* Loading Message OUTSIDE SVG */}
-                {loading && (
-                    <p className="text-2xl font-bold text-emerald-500 mt-4">Loading heatmap...</p>
-                )}
             </section>
 
             <aside className="hidden lg:block w-80 bg-slate-700 p-6">
@@ -297,12 +170,12 @@ const FootballPitchXG = ({ width = 700, height = 453 }) => {
                     <option value="West Ham United">West Ham United</option>
                     <option value="Wolverhampton Wanderers">Wolverhampton</option>
                 </select>
-                <button onClick={fetchHeatmap} className="bg-white text-black px-4 py-2 rounded hover:bg-gray-200 transition">
-                    Show xG Map
+                <button className="bg-white text-black px-4 py-2 rounded hover:bg-gray-200 transition">
+                    Show xT Map
                 </button>
             </aside>
         </div>
     );
 };
 
-export default FootballPitchXG;
+export default FootballPitchXT;
