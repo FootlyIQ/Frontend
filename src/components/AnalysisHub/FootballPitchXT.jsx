@@ -4,12 +4,38 @@ import * as d3 from "d3";
 
 const FootballPitchXT = ({ width = 700, height = 453 }) => {
     const [selectedTeam, setSelectedTeam] = useState("Arsenal");    //lahko je blank
+    const [heatmapData, setHeatmapData] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0, content: "" });
+    const [hoveredBin, setHoveredBin] = useState(null);
+    const [maxCount, setMaxCount] = useState(0);
+
 
     const pitchWidth = 105; // meters
     const pitchHeight = 68;
     
     const xScale = d3.scaleLinear().domain([0, pitchWidth]).range([0, width]);
     const yScale = d3.scaleLinear().domain([0, pitchHeight]).range([0, height]);
+
+    const fetchMovingXT = () => {
+        setLoading(true);
+        fetch(`http://127.0.0.1:5000/api/xT/moving?team_name=${encodeURIComponent(selectedTeam)}`)
+        .then(res => res.json())
+        .then(data => {
+            const counts = data.counts;
+            console.log(counts);
+            const max = Math.max(...counts.flat());
+            console.log(max);
+            setMaxCount(max);
+            setHeatmapData(data.counts);
+            setLoading(false);
+        })
+        .catch(err => {
+            console.error("Error fetching moving xT map:", err);
+            setLoading(false);
+        });
+    }
+
     
 
     return (
@@ -134,7 +160,79 @@ const FootballPitchXT = ({ width = 700, height = 453 }) => {
                         stroke="white"
                         strokeWidth={8}
                     />
+
+
+                    {/* Moving xT heatmap */}
+                    {heatmapData && (() => {
+                        const flatCounts = heatmapData.flat();
+                        const maxCount = d3.max(flatCounts);
+                        const colorScale = d3.scaleSequential()
+                            .domain([0, maxCount])
+                            .interpolator(d3.interpolateBlues);
+
+                        return heatmapData.map((row, i) =>
+                            row.map((count, j) => {
+                                const cellWidth = pitchWidth / 16;
+                                const cellHeight = pitchHeight / 12;
+                                const counter = row[j];
+                                const color = colorScale(count);
+
+                                return (
+                                    <rect
+                                        key={`cell-${i}-${j}`}
+                                        x={xScale(j * cellWidth)}
+                                        y={yScale(i * cellHeight)}
+                                        width={xScale(cellWidth) - xScale(0)}
+                                        height={yScale(cellHeight) - yScale(0)}
+                                        fill={color}
+                                        opacity={hoveredBin?.i === i && hoveredBin?.j === j ? 1 : 0.6}
+                                        onMouseEnter={(e) => {
+                                            setHoveredBin({ i, j });
+                                            const percentage = maxCount > 0 ? ((counter / maxCount) * 100).toFixed(1) : "0";
+                                            setTooltip({
+                                                visible: true,
+                                                x: e.clientX,
+                                                y: e.clientY,
+                                                content: `${percentage}% of moved passes`,
+                                            });
+                                        }}
+                                        onMouseMove={(e) => {
+                                            setTooltip((prev) => ({ ...prev, x: e.clientX, y: e.clientY }));
+                                        }}
+                                        onMouseLeave={() => {
+                                            setHoveredBin(null);
+                                            setTooltip({ visible: false, x: 0, y: 0, content: "" });
+                                        }}
+                                    />
+                                );
+                            })
+                        );
+                    })()}
                 </svg>
+
+                {/* Tooltip */}
+                {tooltip.visible && (
+                    <div
+                        style={{
+                            position: "fixed",
+                            left: tooltip.x + 15,
+                            top: tooltip.y + 15,
+                            backgroundColor: "rgba(0,0,0,0.8)",
+                            color: "white",
+                            padding: "6px 10px",
+                            borderRadius: "4px",
+                            pointerEvents: "none",
+                            fontSize: "0.875rem",
+                            zIndex: 1000,
+                        }}
+                    >
+                        {tooltip.content}
+                    </div>
+                )}
+                {/* Loading Message OUTSIDE SVG */}
+                {loading && (
+                    <p className="text-2xl font-bold text-emerald-500 mt-4">Loading heatmap...</p>
+                )}
 
             </section>
 
@@ -170,7 +268,7 @@ const FootballPitchXT = ({ width = 700, height = 453 }) => {
                     <option value="West Ham United">West Ham United</option>
                     <option value="Wolverhampton Wanderers">Wolverhampton</option>
                 </select>
-                <button className="bg-white text-black px-4 py-2 rounded hover:bg-gray-200 transition">
+                <button onClick={fetchMovingXT} className="bg-white text-black px-4 py-2 rounded hover:bg-gray-200 transition">
                     Show xT Map
                 </button>
             </aside>
