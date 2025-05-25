@@ -230,12 +230,12 @@ const FootballPitchXT = ({ width = 700, height = 453 }) => {
                                         opacity={hoveredBin?.i === i && hoveredBin?.j === j ? 1 : 0.7}
                                         onMouseEnter={(e) => {
                                             setHoveredBin({ i, j });
-                                            const percentage = maxCount > 0 ? ((counter / maxCount) * 100).toFixed(1) : "0";
+                                            const percentage = maxCount > 0 ? (counter / maxCount).toFixed(3) : "0";
                                             setTooltip({
                                                 visible: true,
                                                 x: e.clientX,
                                                 y: e.clientY,
-                                                content: `${percentage}% of moved passes`,
+                                                content: `${percentage} index of moved passes`,
                                             });
                                         }}
                                         onMouseMove={(e) => {
@@ -279,12 +279,12 @@ const FootballPitchXT = ({ width = 700, height = 453 }) => {
                                         opacity={hoveredBin?.i === i && hoveredBin?.j === j ? 1 : 0.7}
                                         onMouseEnter={(e) => {
                                             setHoveredBin({ i, j });
-                                            const percentage = maxCount > 0 ? ((counter / maxCount) * 100).toFixed(1) : "0";
+                                            const percentage = maxCount > 0 ? (counter / maxCount).toFixed(3) : "0";
                                             setTooltip({
                                                 visible: true,
                                                 x: e.clientX,
                                                 y: e.clientY,
-                                                content: `${percentage}% of shots taken`,
+                                                content: `${percentage} index of shots taken`,
                                             });
                                         }}
                                         onMouseMove={(e) => {
