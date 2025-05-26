@@ -6,6 +6,7 @@ import { doc, getDoc } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../../firebaseConfig";
 import './FantasyPitch.css';
+import PlayerDetailCard from "./PlayerDetailCard";
 
 const positionMap = {
   1: "goalkeeper",
@@ -21,6 +22,8 @@ export default function FantasyPitch() {
   const [totalPoints, setTotalPoints] = useState(0);
   const [loading, setLoading] = useState(false);
   const [gameweek, setGameweek] = useState(36);
+  const [selectedPlayer, setSelectedPlayer] = useState(null);
+  const onClosePlayerCard = () => setSelectedPlayer(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -72,6 +75,15 @@ export default function FantasyPitch() {
     }
   };
 
+  const handlePlayerClick = async (player) => {
+    try {
+      const res = await axios.get(`http://127.0.0.1:5000/api/fpl/player-details/${player.id}?is_captain=${player.is_captain}`);
+      setSelectedPlayer({ ...player, stats: res.data });
+    } catch (err) {
+      console.error("Failed to fetch player stats", err);
+    }
+  };
+
   const getPositionGroup = (position) => {
     return startingPlayers.filter((player) => player.position === position);
   };
@@ -108,7 +120,12 @@ export default function FantasyPitch() {
           : `https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_${shirtNumber}-110.webp`;
 
         return (
-          <div key={p.id} className="player-card" title={`${p.first_name} ${p.second_name}\nPoints: ${p.points}`}>
+          <div
+          key={p.id}
+          className={`player-card cursor-pointer ${selectedPlayer?.id === p.id ? "ring-2 ring-emerald-500" : ""}`}
+          onClick={() => handlePlayerClick(p)}
+          title={`${p.first_name} ${p.second_name}\nPoints: ${p.points}`}
+        >
             {/* Top-left C/VC */}
             {(p.is_captain || p.is_vice_captain) && (
               <div className="captain-marker">
@@ -177,6 +194,16 @@ export default function FantasyPitch() {
           </div>
         </div>
       </main>
+      {/* Modal Overlay */}
+      {selectedPlayer?.stats && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/70 dark:bg-slate-900/70">
+          <PlayerDetailCard
+            player={selectedPlayer}
+            stats={selectedPlayer.stats}
+            onClose={onClosePlayerCard}
+          />
+        </div>
+      )}
     </div>
   );
 }
