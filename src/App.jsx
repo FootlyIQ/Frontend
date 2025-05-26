@@ -7,6 +7,7 @@ import Navbar from './components/Navbar';
 import Profile from './pages/Profile';
 import MatchDetail from './components/Home/MatchDetail';
 import AnalysisHub from './pages/AnalysisHub';
+import Voting from './pages/VotingBar_test';
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
             <Route path="/match/:matchId" element={<MatchDetail />} />
             <Route path="/team/:teamId" element={<ClubPage />} />
             <Route path="/analysis" element={<AnalysisHub />} />
+            <Route path='/predictions' element={<Voting />} />
           </Routes>
         </main>
       </div>
