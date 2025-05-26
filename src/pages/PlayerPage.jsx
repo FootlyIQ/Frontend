@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 
 function PlayerPage() {
   const { playerId } = useParams();
+  const navigate = useNavigate();
   const [playerDetails, setPlayerDetails] = useState(null);
   const [playerMatches, setPlayerMatches] = useState(null);
   const [error, setError] = useState('');
@@ -263,7 +264,7 @@ function PlayerPage() {
                     <div style={{ textAlign: 'center' }}>
                       <p style={{ fontSize: '0.9rem', color: '#666' }}>Matches Played</p>
                       <p style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>
-                        {playerMatches.stats.matchesPlayed}
+                        {playerMatches.stats.matchesOnPitch}
                       </p>
                     </div>
                     <div style={{ textAlign: 'center' }}>
@@ -301,6 +302,7 @@ function PlayerPage() {
                       {playerMatches.matches.map((match, idx) => (
                         <li
                           key={idx}
+                          onClick={() => navigate(`/match/${match.match_id}`)}
                           style={{
                             display: 'flex',
                             alignItems: 'center',
@@ -311,6 +313,18 @@ function PlayerPage() {
                             marginBottom: '0.5rem',
                             borderRadius: '8px',
                             boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease',
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = '#f8f9fa';
+                            e.currentTarget.style.transform = 'translateY(-2px)';
+                            e.currentTarget.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = '#fff';
+                            e.currentTarget.style.transform = 'none';
+                            e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
                           }}
                         >
                           {/* Competition */}

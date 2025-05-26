@@ -13,17 +13,91 @@ function ClubPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('fixtures');
 
-  useEffect(() => {
-    const fetchClubData = async () => {
-      setLoading(true);
-      try {
-        const resMatches = await fetch(`http://localhost:5000/team-matches/${teamId}`);
-        if (!resMatches.ok) {
-          throw new Error('Error loading matches');
-        }
-        const matchesData = await resMatches.json();
-        setFixtures(matchesData);
+  // New state for filters
+  const [filters, setFilters] = useState({ seasons: [], competitions: [] });
+  const [selectedSeason, setSelectedSeason] = useState(null);
+  const [selectedCompetition, setSelectedCompetition] = useState(null);
 
+  // Fetch filters when component mounts
+  useEffect(() => {
+    const fetchFilters = async () => {
+      try {
+        const response = await fetch(`http://localhost:5000/team-filters/${teamId}`);
+        if (!response.ok) {
+          throw new Error('Error loading filters');
+        }
+        const data = await response.json();
+
+        // Remove duplicate seasons by comparing stringified objects
+        const uniqueSeasons = data.seasons.filter(
+          (season, index, self) =>
+            index ===
+            self.findIndex((s) => s.startDate === season.startDate && s.endDate === season.endDate)
+        );
+
+        setFilters({
+          ...data,
+          seasons: uniqueSeasons,
+        });
+
+        // Set default selections and fetch data with these defaults
+        if (uniqueSeasons.length > 0 && data.competitions.length > 0) {
+          const defaultSeason = uniqueSeasons[0].year;
+          const defaultCompetition = data.competitions[0].id;
+
+          setSelectedSeason(defaultSeason);
+          setSelectedCompetition(defaultCompetition);
+
+          // Fetch matches with default filters
+          fetchMatchesWithFilters(defaultSeason, defaultCompetition);
+        }
+      } catch (err) {
+        console.error('Error fetching filters:', err);
+      }
+    };
+    fetchFilters();
+  }, [teamId]);
+
+  // Separate function to fetch matches with filters
+  const fetchMatchesWithFilters = async (season, competition) => {
+    try {
+      let matchesUrl = `http://localhost:5000/team-matches/${teamId}`;
+      const params = new URLSearchParams();
+
+      if (season) {
+        params.append('season', season.split('/')[0]); // Use first year of season
+      }
+      if (competition) {
+        params.append('competition', competition);
+      }
+      if (params.toString()) {
+        matchesUrl += `?${params.toString()}`;
+      }
+
+      const resMatches = await fetch(matchesUrl);
+      if (!resMatches.ok) {
+        throw new Error('Error loading matches');
+      }
+      const matchesData = await resMatches.json();
+      setFixtures(matchesData);
+    } catch (err) {
+      setError(err.message);
+      setFixtures([]);
+    }
+  };
+
+  // Modified useEffect for fetching matches when filters change
+  useEffect(() => {
+    if (selectedSeason && selectedCompetition) {
+      setLoading(true);
+      fetchMatchesWithFilters(selectedSeason, selectedCompetition).finally(() => setLoading(false));
+    }
+  }, [selectedSeason, selectedCompetition]);
+
+  // Separate useEffect for fetching squad data
+  useEffect(() => {
+    const fetchSquadData = async () => {
+      try {
         const resSquad = await fetch(`http://localhost:5000/team-squad/${teamId}`);
         if (!resSquad.ok) {
           throw new Error('Error loading squad');
@@ -35,16 +109,13 @@ function ClubPage() {
         setError('');
       } catch (err) {
         setError(err.message);
-        setFixtures([]);
         setSquad([]);
         setTeamName('');
         setTeamCrest('');
-      } finally {
-        setLoading(false);
       }
     };
 
-    fetchClubData();
+    fetchSquadData();
   }, [teamId]);
 
   // Helper function to format stage string nicely: "REGULAR_SEASON" -> "Regular Season"
@@ -166,12 +237,59 @@ function ClubPage() {
           >
             {activeTab === 'fixtures' ? (
               <>
-                <h3 style={{ marginBottom: '1rem' }}>Upcoming Matches</h3>
+                <div
+                  style={{
+                    display: 'flex',
+                    gap: '1rem',
+                    marginBottom: '1.5rem',
+                    alignItems: 'center',
+                  }}
+                >
+                  <select
+                    value={selectedSeason || ''}
+                    onChange={(e) => setSelectedSeason(e.target.value)}
+                    style={{
+                      padding: '0.5rem',
+                      borderRadius: '8px',
+                      border: '1px solid #ccc',
+                      minWidth: '150px',
+                    }}
+                  >
+                    {/* Filter unique seasons by year */}
+                    {Array.from(new Set(filters.seasons.map((season) => season.year))).map(
+                      (year) => (
+                        <option key={year} value={year}>
+                          {year}
+                        </option>
+                      )
+                    )}
+                  </select>
+
+                  <select
+                    value={selectedCompetition || ''}
+                    onChange={(e) => setSelectedCompetition(e.target.value)}
+                    style={{
+                      padding: '0.5rem',
+                      borderRadius: '8px',
+                      border: '1px solid #ccc',
+                      minWidth: '200px',
+                    }}
+                  >
+                    {filters.competitions.map((comp) => (
+                      <option key={comp.id} value={comp.id}>
+                        {comp.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <h3 style={{ marginBottom: '1rem' }}>Matches</h3>
                 {fixtures.length > 0 ? (
                   <ul style={{ listStyle: 'none', padding: 0 }}>
                     {fixtures.map((match, idx) => (
                       <li
                         key={idx}
+                        onClick={() => navigate(`/match/${match.match_id}`)}
                         style={{
                           display: 'flex',
                           alignItems: 'center',
@@ -182,32 +300,30 @@ function ClubPage() {
                           width: '100%',
                           boxSizing: 'border-box',
                           flexWrap: 'wrap',
-                          position: 'relative',
+                          backgroundColor: '#fff',
+                          borderRadius: '8px',
+                          marginBottom: '0.5rem',
+                          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = '#f8f9fa';
+                          e.currentTarget.style.transform = 'translateY(-2px)';
+                          e.currentTarget.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = '#fff';
+                          e.currentTarget.style.transform = 'none';
+                          e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
                         }}
                       >
-                        {/* Gumb vedno na levi strani */}
-                        <div style={{ position: 'absolute', left: '-100px' }}>
-                          <button
-                            style={{
-                              padding: '0.4rem 0.8rem',
-                              borderRadius: '8px',
-                              backgroundColor: '#007bff',
-                              color: '#fff',
-                              border: 'none',
-                              cursor: 'pointer',
-                            }}
-                            onClick={() => navigate(`/match/${match.match_id}`)}
-                          >
-                            More info
-                          </button>
-                        </div>
-
-                        {/* Datum */}
+                        {/* Date */}
                         <div style={{ minWidth: 80, flexShrink: 0 }}>
                           <strong>{match.date}</strong>
                         </div>
 
-                        {/* Ekipe + rezultat */}
+                        {/* Teams + score */}
                         <div
                           style={{
                             display: 'flex',
@@ -228,12 +344,12 @@ function ClubPage() {
                           <img src={match.away_crest} alt="" style={{ height: 30 }} />
                         </div>
 
-                        {/* Liga info */}
+                        {/* League info */}
                         <div
                           style={{
                             display: 'flex',
                             width: '25%',
-                            marginRight: '5.5rem',
+                            marginRight: '1rem',
                           }}
                         >
                           <div style={{ flexBasis: '8%', minWidth: 80, fontSize: '0.85rem' }}>
@@ -278,48 +394,100 @@ function ClubPage() {
               <>
                 <h3 style={{ marginBottom: '1rem' }}>Squad Members</h3>
                 {squad.length > 0 ? (
-                  <ul style={{ listStyle: 'none', padding: 0 }}>
-                    {squad.map((player, idx) => (
-                      <li
-                        key={idx}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'flex-start',
-                          padding: '1rem',
-                          borderBottom: '1px solid #ccc',
-                          gap: '1rem',
-                          width: '100%',
-                          boxSizing: 'border-box',
-                          position: 'relative',
-                        }}
-                      >
-                        <div style={{ position: 'absolute', left: '-100px' }}>
-                          {player.id && ( // Only show button if player has an ID
-                            <button
-                              style={{
-                                padding: '0.4rem 0.8rem',
-                                borderRadius: '8px',
-                                backgroundColor: '#28a745',
-                                color: '#fff',
-                                border: 'none',
-                                cursor: 'pointer',
-                              }}
-                              onClick={() => navigate(`/player/${player.id}`)}
-                            >
-                              Info
-                            </button>
-                          )}
-                        </div>
-                        {/* Info o igralcu */}
-                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                          <strong>{player.name}</strong>
-                          <span>Position: {player.position}</span>
-                          <span>Nationality: {player.nationality}</span>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
+                  <>
+                    {console.log('Unique positions:', [...new Set(squad.map((p) => p.position))])}
+
+                    <ul style={{ listStyle: 'none', padding: 0 }}>
+                      {/* Coach section */}
+                      {squad
+                        .filter((player) => player.position === 'Manager')
+                        .map((player, idx) => (
+                          <li
+                            key={`coach-${idx}`}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'flex-start',
+                              padding: '1rem',
+                              borderBottom: '1px solid #ccc',
+                              gap: '1rem',
+                              width: '100%',
+                              boxSizing: 'border-box',
+                              position: 'relative',
+                              backgroundColor: '#f8f9fa',
+                            }}
+                          >
+                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <strong>{player.name}</strong>
+                                <span
+                                  style={{
+                                    backgroundColor: '#0056b3',
+                                    color: 'white',
+                                    padding: '2px 8px',
+                                    borderRadius: '4px',
+                                    fontSize: '0.8rem',
+                                  }}
+                                >
+                                  Head Coach
+                                </span>
+                              </div>
+                              <span>Nationality: {player.nationality}</span>
+                            </div>
+                          </li>
+                        ))}
+
+                      {/* Goalkeeper section */}
+                      <h4 style={{ marginTop: '1.5rem', marginBottom: '0.5rem' }}>Goalkeepers</h4>
+                      {squad
+                        .filter((player) => player.position === 'Goalkeeper')
+                        .map((player, idx) => (
+                          <PlayerListItem key={`gk-${idx}`} player={player} navigate={navigate} />
+                        ))}
+
+                      {/* Defender section */}
+                      <h4 style={{ marginTop: '1.5rem', marginBottom: '0.5rem' }}>Defenders</h4>
+                      {squad
+                        .filter(
+                          (player) =>
+                            player.position === 'Defence' ||
+                            player.position === 'Centre-Back' ||
+                            player.position === 'Left-Back' ||
+                            player.position === 'Right-Back'
+                        )
+                        .map((player, idx) => (
+                          <PlayerListItem key={`def-${idx}`} player={player} navigate={navigate} />
+                        ))}
+
+                      {/* Midfielder section */}
+                      <h4 style={{ marginTop: '1.5rem', marginBottom: '0.5rem' }}>Midfielders</h4>
+                      {squad
+                        .filter(
+                          (player) =>
+                            player.position === 'Midfield' ||
+                            player.position === 'Central Midfield' ||
+                            player.position === 'Defensive Midfield' ||
+                            player.position === 'Attacking Midfield'
+                        )
+                        .map((player, idx) => (
+                          <PlayerListItem key={`mid-${idx}`} player={player} navigate={navigate} />
+                        ))}
+
+                      {/* Forward section */}
+                      <h4 style={{ marginTop: '1.5rem', marginBottom: '0.5rem' }}>Forwards</h4>
+                      {squad
+                        .filter(
+                          (player) =>
+                            player.position === 'Offence' ||
+                            player.position === 'Centre-Forward' ||
+                            player.position === 'Left Winger' ||
+                            player.position === 'Right Winger'
+                        )
+                        .map((player, idx) => (
+                          <PlayerListItem key={`att-${idx}`} player={player} navigate={navigate} />
+                        ))}
+                    </ul>
+                  </>
                 ) : (
                   <p>No squad data available.</p>
                 )}
@@ -331,5 +499,44 @@ function ClubPage() {
     </div>
   );
 }
+
+const PlayerListItem = ({ player, navigate }) => (
+  <li
+    style={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'flex-start',
+      padding: '1rem',
+      borderBottom: '1px solid #ccc',
+      gap: '1rem',
+      width: '100%',
+      boxSizing: 'border-box',
+      position: 'relative',
+    }}
+  >
+    <div style={{ position: 'absolute', left: '-100px' }}>
+      {player.id && (
+        <button
+          style={{
+            padding: '0.4rem 0.8rem',
+            borderRadius: '8px',
+            backgroundColor: '#28a745',
+            color: '#fff',
+            border: 'none',
+            cursor: 'pointer',
+          }}
+          onClick={() => navigate(`/player/${player.id}`)}
+        >
+          Info
+        </button>
+      )}
+    </div>
+    <div style={{ display: 'flex', flexDirection: 'column' }}>
+      <strong>{player.name}</strong>
+      <span>Position: {player.position}</span>
+      <span>Nationality: {player.nationality}</span>
+    </div>
+  </li>
+);
 
 export default ClubPage;

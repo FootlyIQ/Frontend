@@ -22,8 +22,8 @@ export default function MatchDetail() {
     };
 
     fetchMatchDetails();
-    // ⏱️ Osvežuj vsakih 4 sekunde (4000 ms)
-    const interval = setInterval(fetchMatchDetails, 5000);
+    // ⏱️ Osvežuj vsakih 15 sekund (15000 ms)
+    const interval = setInterval(fetchMatchDetails, 15000);
 
     // Počisti interval ob unmountu
     return () => clearInterval(interval);
