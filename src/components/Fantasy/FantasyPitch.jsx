@@ -1,4 +1,4 @@
-import { useState, useEffect, use } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { db } from "../../firebaseConfig";
@@ -25,8 +25,17 @@ export default function FantasyPitch() {
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [selectedGameweek, setSelectedGameweek] = useState(38); // Default gameweek
   const [currentGameweek, setCurrentGameweek] = useState(38); // Default current gameweek
+  const [suggestions, setSuggestions] = useState(null);
+  const [captaincyLoading, setCaptaincyLoading] = useState(false);
+  const [transfersLoading, setTransfersLoading] = useState(false);
+  const [captaincySuggestions, setCaptaincySuggestions] = useState(null);
+  const [transferSuggestions, setTransferSuggestions] = useState(null);
+  const [showCaptaincyBox, setShowCaptaincyBox] = useState(false);
+  const [showTransferBox, setShowTransferBox] = useState(false);
   const onClosePlayerCard = () => setSelectedPlayer(null);
   const navigate = useNavigate();
+  const captaincyBoxRef = useRef(null);
+  const transferBoxRef = useRef(null);
 
   useEffect(() => {
     const fetchCurrentGameweek = async () => {
@@ -106,7 +115,55 @@ export default function FantasyPitch() {
     if (teamId) {
       fetchTeam(teamId, Number(e.target.value));
     }
+    setShowCaptaincyBox(false);
+    setShowTransferBox(false);
+    setCaptaincySuggestions(null);
+    setTransferSuggestions(null);
   }
+
+  // Handler for captaincy suggestions
+  const handleGetCaptaincy = async () => {
+    setCaptaincyLoading(true);
+    setCaptaincySuggestions(null);
+    setShowCaptaincyBox(false);
+    try {
+      const res = await axios.get(
+        `http://127.0.0.1:5000/api/fpl/captaincy/${teamId}?gameweek=${selectedGameweek}`
+      );
+      setCaptaincySuggestions(res.data);
+      setShowCaptaincyBox(true);
+      setTimeout(() => {
+        captaincyBoxRef.current?.scrollIntoView({ behavior: "smooth" });
+      }, 100);
+    } catch (err) {
+      setCaptaincySuggestions({ error: "Failed to fetch captaincy suggestions" });
+      setShowCaptaincyBox(true)
+    } finally {
+      setCaptaincyLoading(false);
+    }
+  };
+
+  // Handler for transfer suggestions
+  const handleGetTransfers = async () => {
+    setTransfersLoading(true);
+    setTransferSuggestions(null);
+    setShowTransferBox(false);
+    try {
+      const res = await axios.get(
+        `http://127.0.0.1:5000/api/fpl/transfers/${teamId}?gameweek=${selectedGameweek}`
+      );
+      setTransferSuggestions(res.data);
+      setShowTransferBox(true);
+      setTimeout(() => {
+        transferBoxRef.current?.scrollIntoView({ behavior: "smooth" });
+      }, 100);
+    } catch (err) {
+      setTransferSuggestions({ error: "Failed to fetch transfer suggestions" });
+      setShowTransferBox(true);
+    } finally {
+      setTransfersLoading(false);
+    }
+  };
 
   const getPositionGroup = (position) => {
     return startingPlayers.filter((player) => player.position === position);
@@ -145,11 +202,11 @@ export default function FantasyPitch() {
 
         return (
           <div
-          key={p.id}
-          className={`player-card cursor-pointer ${selectedPlayer?.id === p.id ? "ring-2 ring-emerald-500" : ""}`}
-          onClick={() => handlePlayerClick(p)}
-          title={`${p.first_name} ${p.second_name}\nPoints: ${p.points}`}
-        >
+            key={p.id}
+            className={`player-card cursor-pointer ${selectedPlayer?.id === p.id ? "ring-2 ring-emerald-500" : ""}`}
+            onClick={() => handlePlayerClick(p)}
+            title={`${p.first_name} ${p.second_name}\nPoints: ${p.points}`}
+          >
             {/* Top-left C/VC */}
             {(p.is_captain || p.is_vice_captain) && (
               <div className="captain-marker">
@@ -196,6 +253,25 @@ export default function FantasyPitch() {
               ))}
             </select>
           </div>
+          {/* Suggestion Buttons */}
+          {selectedGameweek < currentGameweek && (
+            <div className="flex gap-4 justify-center my-6">
+              <button
+                onClick={handleGetCaptaincy}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-1 rounded"
+                disabled={captaincyLoading}
+              >
+                {captaincyLoading ? "Loading..." : `Get Captaincy Suggestions for GW ${selectedGameweek + 1}`}
+              </button>
+              <button
+                onClick={handleGetTransfers}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded"
+                disabled={transfersLoading}
+              >
+                {transfersLoading ? "Loading..." : `Get Transfer Suggestions for GW ${selectedGameweek + 1}`}
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="flex flex-col lg:flex-row gap-6">
@@ -225,6 +301,242 @@ export default function FantasyPitch() {
                 {renderPlayers(benchPlayers, "bench")}
               </div>
             </div>
+            {/* Results under the pitch */}
+            <div className="flex flex-col gap-6 justify-center mt-8">
+              {showCaptaincyBox && (
+                <div
+                  ref={captaincyBoxRef}
+                  className="flex-1 bg-white dark:bg-slate-800 rounded-lg shadow p-4 mb-4 w-full mx-auto"
+                >
+                  <h3 className="font-bold mb-4 text-xl text-emerald-700 flex items-center gap-2">
+                    <svg width="28" height="28" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#059669" /><text x="12" y="17" textAnchor="middle" fontSize="14" fill="#fff" fontWeight="bold">C</text></svg>
+                    Top 6 Captaincy Choices
+                  </h3>
+                  {captaincyLoading ? (
+                    <div className="text-center text-lg font-semibold">Loading...</div>
+                  ) : captaincySuggestions && Array.isArray(captaincySuggestions.suggested_captains) && captaincySuggestions.suggested_captains.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {captaincySuggestions.suggested_captains.map((cap, idx) => {
+                        const shirtNumber = teamIdToShirtNumber[cap.team_id] || 1;
+                        const shirtUrl = cap.position === 1
+                          ? `https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_${shirtNumber}_1-110.webp`
+                          : `https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_${shirtNumber}-110.webp`;
+                        const posLabel = positionMap[cap.position] || "";
+
+                        // Badge for top 3
+                        let badge = null;
+                        if (idx === 0) {
+                          badge = (
+                            <span className="absolute -top-2 -right-2 bg-emerald-600 text-white text-xs px-2 py-0.5 rounded-full font-bold shadow">Best</span>
+                          );
+                        } else if (idx === 1) {
+                          badge = (
+                            <span className="absolute -top-2 -right-2 bg-gray-300 text-gray-800 text-xs px-2 py-0.5 rounded-full font-bold shadow">Silver</span>
+                          );
+                        } else if (idx === 2) {
+                          badge = (
+                            <span className="absolute -top-2 -right-2" style={{
+                              background: 'linear-gradient(90deg, #cd7f32 0%, #b87333 100%)',
+                              color: '#fff',
+                              fontWeight: 'bold',
+                              fontSize: '0.75rem',
+                              padding: '2px 8px',
+                              borderRadius: '9999px',
+                              boxShadow: '0 2px 6px rgba(0,0,0,0.15)'
+                            }}>Bronze</span>
+                          );
+                        }
+
+                        return (
+                          <div
+                            key={cap.id}
+                            className={`flex items-center gap-4 bg-emerald-50 dark:bg-slate-900 rounded-lg shadow-sm p-3 border-2 ${idx === 0 ? "border-emerald-600" : idx === 1 ? "border-gray-400" : idx === 2 ? "border-yellow-700" : "border-transparent"}`}
+                            style={{ minWidth: 0 }}
+                          >
+                            {/* Ranking Number */}
+                            <div className="flex flex-col items-center mr-2">
+                              <span className={`text-2xl font-bold ${idx === 0 ? "text-emerald-600" : idx === 1 ? "text-gray-400" : idx === 2 ? "text-yellow-700" : "text-gray-400"}`}>
+                                {idx + 1}
+                              </span>
+                            </div>
+                            <div className="relative">
+                              <img
+                                src={shirtUrl}
+                                alt="kit"
+                                className="w-14 h-14 object-contain"
+                                style={{ filter: idx === 0 ? "drop-shadow(0 0 8px #05966988)" : undefined }}
+                              />
+                              {badge}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold text-lg truncate">{cap.first_name} {cap.second_name}</span>
+                                <span className="text-xs bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-200 px-2 py-0.5 rounded">{posLabel}</span>
+                              </div>
+                              <div className="text-sm text-gray-600 dark:text-gray-300">
+                                <span className="font-semibold text-emerald-700">Score:</span>{" "}
+                                <span className={`font-bold ${idx === 0 ? "text-emerald-600" : ""}`}>{cap.score.toFixed(2)}</span>
+                                {" | "}
+                                <span className="font-semibold">Avg pts:</span> {cap.avg_points.toFixed(2)}
+                                {" | "}
+                                <span className="font-semibold">Form:</span> {cap.form}
+                              </div>
+                              <div className="text-xs mt-1">
+                                <span className="font-semibold">Next:</span>{" "}
+                                <span>
+                                  {cap.next_fixture.opponent} ({cap.next_fixture.is_home ? "Home" : "Away"}, FDR: {cap.next_fixture.fdr})
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="text-center">No captaincy suggestions</div>
+                  )}
+                </div>
+              )}
+
+              {/* Transfer Suggestions */}
+              {showTransferBox && transferSuggestions && (
+                <div
+                  ref={transferBoxRef}
+                  className="flex-1 bg-white dark:bg-slate-800 rounded-lg shadow p-4 mb-4 w-full mx-auto"
+                >
+                  <h3 className="font-bold mb-4 text-xl text-blue-700 flex items-center gap-2">
+                    <svg width="28" height="28" fill="none" viewBox="0 0 24 24">
+                      <circle cx="12" cy="12" r="10" fill="#2563eb" />
+                      <text x="12" y="17" textAnchor="middle" fontSize="14" fill="#fff" fontWeight="bold">T</text>
+                    </svg>
+                    Transfer Suggestions
+                  </h3>
+                  {/* Show free transfers and budget */}
+                  <div className="flex flex-wrap gap-6 mb-6 justify-center">
+                    <div className="flex items-center gap-2 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-4 py-2 rounded-lg shadow">
+                      <span className="font-semibold">Free Transfers:</span>
+                      <span className="font-bold text-lg">{transferSuggestions.free_transfers ?? "-"}</span>
+                    </div>
+                    <div className="flex items-center gap-2 bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 px-4 py-2 rounded-lg shadow">
+                      <span className="font-semibold">Budget:</span>
+                      <span className="font-bold text-lg">£{transferSuggestions.budget?.toFixed(1) ?? "-"}</span>
+                      <span className="text-xs text-gray-500">m</span>
+                    </div>
+                  </div>
+                  {transfersLoading ? (
+                    <div className="text-center text-lg font-semibold">Loading...</div>
+                  ) : Array.isArray(transferSuggestions.top_transfers) && transferSuggestions.top_transfers.length > 0 ? (
+                    <div>
+                      {transferSuggestions.top_transfers.map((transfer, idx) => {
+                        const out = transfer.out;
+                        const inn = transfer.in;
+                        const outShirtNumber = teamIdToShirtNumber[out.team_id || out.team] || 1;
+                        const outShirtUrl = out.position === 1
+                          ? `https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_${outShirtNumber}_1-110.webp`
+                          : `https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_${outShirtNumber}-110.webp`;
+                        const inShirtNumber = teamIdToShirtNumber[inn.team_id || inn.team] || 1;
+                        const inShirtUrl = inn.position === 1
+                          ? `https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_${inShirtNumber}_1-110.webp`
+                          : `https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_${inShirtNumber}-110.webp`;
+                        const outPosLabel = positionMap[out.position || out.element_type] || "";
+                        const inPosLabel = positionMap[inn.position || inn.element_type] || "";
+              
+                        // Shared card classes for both out and in cards
+                        const cardClass =
+                          "flex items-center gap-4 bg-slate-900 dark:bg-slate-900 rounded-lg shadow-sm p-3 border-2 min-w-[270px] max-w-[320px] relative flex-1";
+              
+                        return (
+                          <div key={out.id + "-" + inn.id}
+                            className="flex flex-col sm:flex-row items-center justify-center gap-2 mb-6"
+                          >
+                            {/* OUT card */}
+                            <div
+                              className={`${cardClass} border-red-600`}
+                              style={{ minWidth: 0, minHeight: "120px" }}
+                            >
+                              <div className="relative">
+                                <img
+                                  src={outShirtUrl}
+                                  alt="kit"
+                                  className="w-14 h-14 object-contain"
+                                />
+                                <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs px-2 py-0.5 rounded-full font-bold shadow">Out</span>
+                              </div>
+                              <div className="flex-1 min-w-0 flex flex-col justify-between" style={{ minHeight: "72px" }}>
+                                <div>
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-bold text-lg truncate">{out.first_name} {out.second_name}</span>
+                                    <span className="text-xs bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-200 px-2 py-0.5 rounded">{outPosLabel}</span>
+                                  </div>
+                                  <div className="text-sm text-gray-300">
+                                    <span className="font-semibold">Price:</span> £{out.now_cost?.toFixed(1) ?? "-"}
+                                    {" | "}
+                                    <span className="font-semibold">Form:</span> {out.form}
+                                  </div>
+                                </div>
+                                {/* Add empty lines for spacing to match IN card */}
+                                <div className="text-sm text-transparent select-none">Score: ----</div>
+                                <div className="text-xs mt-1 text-transparent select-none">Next: ----</div>
+                              </div>
+                            </div>
+                            {/* Swap Icon */}
+                            <div className="flex flex-col items-center justify-center mx-2">
+                              <svg width="36" height="36" fill="none" viewBox="0 0 36 36">
+                                <g>
+                                  {/* Right arrow */}
+                                  <path d="M10 18h16" stroke="#059669" strokeWidth="2" strokeLinecap="round" />
+                                  <path d="M22 14l4 4-4 4" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                </g>
+                              </svg>
+                              <span className="text-xs text-gray-400 mt-1">Swap</span>
+                            </div>
+                            {/* IN card */}
+                            <div
+                              className={`${cardClass} border-green-600`}
+                              style={{ minWidth: 0, minHeight: "120px" }}
+                            >
+                              <div className="relative">
+                                <img
+                                  src={inShirtUrl}
+                                  alt="kit"
+                                  className="w-14 h-14 object-contain"
+                                />
+                                <span className="absolute -top-2 -right-2 bg-green-600 text-white text-xs px-2 py-0.5 rounded-full font-bold shadow">In</span>
+                              </div>
+                              <div className="flex-1 min-w-0 flex flex-col justify-between" style={{ minHeight: "72px" }}>
+                                <div>
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-bold text-lg truncate">{inn.first_name} {inn.second_name}</span>
+                                    <span className="text-xs bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-200 px-2 py-0.5 rounded">{inPosLabel}</span>
+                                  </div>
+                                  <div className="text-sm text-gray-300">
+                                    <span className="font-semibold">Price:</span> £{inn.now_cost?.toFixed(1) ?? "-"}
+                                    {" | "}
+                                    <span className="font-semibold">Form:</span> {inn.form}
+                                  </div>
+                                </div>
+                                <div className="text-sm text-gray-300">
+                                  <span className="font-semibold text-emerald-700">Score:</span>{" "}
+                                  <span className="font-bold text-emerald-700">{inn.score?.toFixed(2) ?? "-"}</span>
+                                </div>
+                                <div className="text-xs mt-1 text-gray-400">
+                                  <span className="font-semibold">Next:</span>{" "}
+                                  <span>
+                                    {inn.next_fixture?.opponent} ({inn.next_fixture?.is_home ? "Home" : "Away"}, FDR: {inn.next_fixture?.fdr})
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="text-center">No transfer suggestions</div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </main>
@@ -236,6 +548,51 @@ export default function FantasyPitch() {
             stats={selectedPlayer.stats}
             onClose={onClosePlayerCard}
           />
+        </div>
+      )}
+      {suggestions && (
+        <div className="bg-white dark:bg-slate-800 rounded-lg shadow p-4 mb-4 max-w-xl mx-auto">
+          <h3 className="font-bold mb-2 text-lg text-emerald-700">Suggestions for Next Gameweek</h3>
+          <div className="mb-4">
+            <strong>Top 5 Captaincy Choices:</strong>
+            {Array.isArray(suggestions.suggested_captains) && suggestions.suggested_captains.length > 0 ? (
+              <ol className="list-decimal ml-6 mt-2">
+                {suggestions.suggested_captains.map((cap) => (
+                  <li key={cap.id} className="mb-2">
+                    <span className="font-semibold">{cap.first_name} {cap.second_name}</span>
+                    {" | Avg pts: "}
+                    <span className="text-emerald-600">{cap.avg_points.toFixed(2)}</span>
+                    {" | Form: "}
+                    <span>{cap.form}</span>
+                    {" | Score: "}
+                    <span className="font-mono">{cap.score.toFixed(2)}</span>
+                    {" | Next: "}
+                    <span>
+                      {cap.next_fixture.opponent} ({cap.next_fixture.is_home ? "Home" : "Away"}, FDR: {cap.next_fixture.fdr})
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            ) : (
+              <div>No captaincy suggestions</div>
+            )}
+          </div>
+          <div>
+            <strong>Transfer Out:</strong>{" "}
+            {Array.isArray(suggestions.suggested_transfers_out) && suggestions.suggested_transfers_out.length > 0
+              ? suggestions.suggested_transfers_out.map((out) =>
+                `${out.first_name} ${out.second_name} (Form: ${out.form})`
+              ).join(", ")
+              : "No suggestion"}
+          </div>
+          <div>
+            <strong>Transfer In:</strong>{" "}
+            {Array.isArray(suggestions.suggested_transfers_in) && suggestions.suggested_transfers_in.length > 0
+              ? suggestions.suggested_transfers_in.map((inn) =>
+                `${inn.first_name} ${inn.second_name} (Form: ${inn.form})`
+              ).join(", ")
+              : "No suggestion"}
+          </div>
         </div>
       )}
     </div>
