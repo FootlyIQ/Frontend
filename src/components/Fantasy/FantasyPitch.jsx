@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { db } from "../../firebaseConfig";
@@ -21,10 +21,27 @@ export default function FantasyPitch() {
   const [benchPlayers, setBenchPlayers] = useState([]);
   const [totalPoints, setTotalPoints] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [gameweek, setGameweek] = useState(36);
+  const [gameweek, setGameweek] = useState(38);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
+  const [selectedGameweek, setSelectedGameweek] = useState(38); // Default gameweek
+  const [currentGameweek, setCurrentGameweek] = useState(38); // Default current gameweek
   const onClosePlayerCard = () => setSelectedPlayer(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchCurrentGameweek = async () => {
+      try {
+        const res = await axios.get("http://127.0.0.1:5000/api/fpl/current-gameweek");
+        const gw = res.data.current_gameweek;
+        setCurrentGameweek(gw);
+        setSelectedGameweek(gw);
+        setGameweek(gw);
+      } catch (err) {
+        console.error("Failed to fetch current gameweek", err);
+      }
+    };
+    fetchCurrentGameweek();
+  }, []);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -55,16 +72,16 @@ export default function FantasyPitch() {
     }
   };
 
-  const fetchTeam = async (id) => {
+  const fetchTeam = async (id, gw = selectedGameweek) => {
     try {
       setLoading(true);
-      const res = await axios.get(`http://127.0.0.1:5000/api/fpl/team/${id}`);
+      const res = await axios.get(`http://127.0.0.1:5000/api/fpl/team/${id}?gameweek=${gw}`);
       const data = res.data;
 
       setStartingPlayers(data.starting_players || []);
       setBenchPlayers(data.bench_players || []);
       setTotalPoints(data.total_points || 0);
-      setGameweek(data.gameweek || 36);
+      setGameweek(gw);
     } catch (err) {
       console.error("Failed to fetch team", err);
       setStartingPlayers([]);
@@ -77,12 +94,19 @@ export default function FantasyPitch() {
 
   const handlePlayerClick = async (player) => {
     try {
-      const res = await axios.get(`http://127.0.0.1:5000/api/fpl/player-details/${player.id}?is_captain=${player.is_captain}`);
+      const res = await axios.get(`http://127.0.0.1:5000/api/fpl/player-details/${player.id}?gameweek=${gameweek}&is_captain=${player.is_captain}`);
       setSelectedPlayer({ ...player, stats: res.data });
     } catch (err) {
       console.error("Failed to fetch player stats", err);
     }
   };
+
+  const handleGameweekChange = (e) => {
+    setSelectedGameweek(Number(e.target.value));
+    if (teamId) {
+      fetchTeam(teamId, Number(e.target.value));
+    }
+  }
 
   const getPositionGroup = (position) => {
     return startingPlayers.filter((player) => player.position === position);
@@ -159,9 +183,19 @@ export default function FantasyPitch() {
         {/* Gameweek and Total Points Section */}
         <div className="gameweek-info text-center mb-6">
           <h2 className="text-3xl font-bold text-emerald-600">Total Points: {totalPoints}</h2>
-          <p className="text-lg font-semibold text-gray-700 dark:text-gray-300">
-            Gameweek: {gameweek}
-          </p>
+          <div className="flex justify-center items-center gap-2 mt-4">
+            <select
+              value={selectedGameweek}
+              onChange={handleGameweekChange}
+              className="border rounded px-2 py-1 text-base"
+            >
+              {Array.from({ length: currentGameweek }, (_, i) => (
+                <option key={i + 1} value={i + 1} className="bg-white text-gray-900 dark:bg-slate-800 dark:text-gray-100">
+                  Gameweek {i + 1}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         <div className="flex flex-col lg:flex-row gap-6">
