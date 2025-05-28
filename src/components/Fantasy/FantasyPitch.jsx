@@ -9,10 +9,10 @@ import './FantasyPitch.css';
 import PlayerDetailCard from "./PlayerDetailCard";
 
 const positionMap = {
-  1: "goalkeeper",
-  2: "defender",
-  3: "midfielder",
-  4: "forward"
+  1: "Goalkeeper",
+  2: "Defender",
+  3: "Midfielder",
+  4: "Forward"
 };
 
 export default function FantasyPitch() {
@@ -32,6 +32,9 @@ export default function FantasyPitch() {
   const [transferSuggestions, setTransferSuggestions] = useState(null);
   const [showCaptaincyBox, setShowCaptaincyBox] = useState(false);
   const [showTransferBox, setShowTransferBox] = useState(false);
+  const [liveRank, setLiveRank] = useState(null);
+  const [prevRank, setPrevRank] = useState(null);
+  const [rankDelta, setRankDelta] = useState(null);
   const onClosePlayerCard = () => setSelectedPlayer(null);
   const navigate = useNavigate();
   const captaincyBoxRef = useRef(null);
@@ -63,6 +66,31 @@ export default function FantasyPitch() {
 
     return () => unsubscribe();
   }, [navigate]);
+
+  // Fetch live rank for the selected gameweek
+  useEffect(() => {
+    const fetchLiveRank = async () => {
+      if (!teamId || !selectedGameweek) return;
+      try {
+        const res = await axios.get(`http://127.0.0.1:5000/api/fpl/entry-history/${teamId}`);
+        const history = res.data.current || [];
+        const curr = history.find(gw => gw.event === selectedGameweek);
+        const prev = history.find(gw => gw.event === selectedGameweek - 1);
+        setLiveRank(curr?.overall_rank ?? null);
+        setPrevRank(prev?.overall_rank ?? null);
+        if (curr && prev && curr.overall_rank && prev.overall_rank) {
+          setRankDelta(prev.overall_rank - curr.overall_rank);
+        } else {
+          setRankDelta(null);
+        }
+      } catch (err) {
+        setLiveRank(null);
+        setPrevRank(null);
+        setRankDelta(null);
+      }
+    };
+    fetchLiveRank();
+  }, [teamId, selectedGameweek]);
 
   const fetchTeamIdFromFirestore = async (uid) => {
     try {
@@ -238,38 +266,112 @@ export default function FantasyPitch() {
     <div className="flex flex-col lg:flex-row min-h-screen bg-white dark:bg-slate-900 text-gray-900 dark:text-gray-100">
       <main className="flex-1 p-6">
         {/* Gameweek and Total Points Section */}
-        <div className="gameweek-info text-center mb-6">
-          <h2 className="text-3xl font-bold text-emerald-600">Total Points: {totalPoints}</h2>
-          <div className="flex justify-center items-center gap-2 mt-4">
-            <select
-              value={selectedGameweek}
-              onChange={handleGameweekChange}
-              className="border rounded px-2 py-1 text-base"
-            >
-              {Array.from({ length: currentGameweek }, (_, i) => (
-                <option key={i + 1} value={i + 1} className="bg-white text-gray-900 dark:bg-slate-800 dark:text-gray-100">
-                  Gameweek {i + 1}
-                </option>
-              ))}
-            </select>
+        <div className="gameweek-info text-center mb-6 relative">
+          {/* Total Points Card */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-4">
+            <div className="bg-gradient-to-r from-emerald-500 to-emerald-700 shadow-lg rounded-xl px-8 py-4 flex items-center gap-4">
+              <svg width="36" height="36" fill="none" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="12" fill="#059669" />
+                <text x="12" y="17" textAnchor="middle" fontSize="16" fill="#fff" fontWeight="bold">P</text>
+              </svg>
+              <div>
+                <div className="text-lg font-semibold text-white">Total Points</div>
+                <div className="text-3xl font-bold text-white drop-shadow">{totalPoints}</div>
+              </div>
+            </div>
+            {/* Gameweek Dropdown */}
+            <div className="flex flex-col items-center">
+              <label htmlFor="gw-select" className="text-sm font-medium mb-1 text-emerald-700 dark:text-emerald-300">Select Gameweek</label>
+              <div className="relative">
+                <select
+                  id="gw-select"
+                  value={selectedGameweek}
+                  onChange={handleGameweekChange}
+                  className="appearance-none border-2 border-emerald-500 dark:border-emerald-700 rounded-lg px-4 py-2 text-base font-semibold bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 shadow focus:outline-none focus:ring-2 focus:ring-emerald-400 transition"
+                  style={{ minWidth: 160 }}
+                >
+                  {Array.from({ length: currentGameweek }, (_, i) => (
+                    <option key={i + 1} value={i + 1} className="bg-white text-gray-900 dark:bg-slate-800 dark:text-gray-100">
+                      Gameweek {i + 1}
+                    </option>
+                  ))}
+                </select>
+                <svg className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-emerald-600 dark:text-emerald-300" width="20" height="20" fill="none" viewBox="0 0 20 20">
+                  <path d="M6 8l4 4 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+            </div>
+            {/* Suggestion Buttons */}
+            {selectedGameweek < currentGameweek && (
+              <div className="flex flex-col gap-2">
+                <button
+                  onClick={handleGetCaptaincy}
+                  className="bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white font-bold px-6 py-2 rounded-lg shadow transition"
+                  disabled={captaincyLoading}
+                >
+                  {captaincyLoading ? (
+                    <span className="flex items-center gap-2">
+                      <svg className="animate-spin" width="18" height="18" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="#fff" strokeWidth="4" opacity="0.2" /><path d="M12 2a10 10 0 0 1 10 10" stroke="#fff" strokeWidth="4" strokeLinecap="round" /></svg>
+                      Loading...
+                    </span>
+                  ) : (
+                    <>Get Captaincy Suggestions</>
+                  )}
+                </button>
+                <button
+                  onClick={handleGetTransfers}
+                  className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold px-6 py-2 rounded-lg shadow transition"
+                  disabled={transfersLoading}
+                >
+                  {transfersLoading ? (
+                    <span className="flex items-center gap-2">
+                      <svg className="animate-spin" width="18" height="18" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="#fff" strokeWidth="4" opacity="0.2" /><path d="M12 2a10 10 0 0 1 10 10" stroke="#fff" strokeWidth="4" strokeLinecap="round" /></svg>
+                      Loading...
+                    </span>
+                  ) : (
+                    <>Get Transfer Suggestions</>
+                  )}
+                </button>
+              </div>
+            )}
           </div>
-          {/* Suggestion Buttons */}
-          {selectedGameweek < currentGameweek && (
-            <div className="flex gap-4 justify-center my-6">
-              <button
-                onClick={handleGetCaptaincy}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-1 rounded"
-                disabled={captaincyLoading}
-              >
-                {captaincyLoading ? "Loading..." : `Get Captaincy Suggestions for GW ${selectedGameweek + 1}`}
-              </button>
-              <button
-                onClick={handleGetTransfers}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded"
-                disabled={transfersLoading}
-              >
-                {transfersLoading ? "Loading..." : `Get Transfer Suggestions for GW ${selectedGameweek + 1}`}
-              </button>
+          {/* Live Ranking Segment */}
+          {liveRank && (
+            <div className="absolute top-0 right-0 mt-2 mr-2 z-10">
+              <div className="bg-white dark:bg-slate-900 border-2 border-emerald-500 rounded-xl shadow-lg px-6 py-3 flex flex-col items-center min-w-[180px]">
+                <div className="flex items-center gap-2 mb-1">
+                  <svg width="22" height="22" fill="none" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10" fill="#059669" />
+                    <text x="12" y="17" textAnchor="middle" fontSize="13" fill="#fff" fontWeight="bold">R</text>
+                  </svg>
+                  <span className="font-semibold text-emerald-700 dark:text-emerald-300">Live Overall Rank For GW {selectedGameweek}</span>
+                </div>
+                <div className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">{liveRank.toLocaleString()}</div>
+                {rankDelta !== null && (
+                  <div className="flex items-center gap-1 text-sm font-medium">
+                    {rankDelta > 0 ? (
+                      <>
+                        <svg width="18" height="18" fill="none" viewBox="0 0 24 24">
+                          <path d="M12 19V5M12 5l-6 6M12 5l6 6" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                        <span className="text-green-500">+{rankDelta} places from GW {selectedGameweek - 1}</span>
+                      </>
+                    ) : rankDelta < 0 ? (
+                      <>
+                        <svg width="18" height="18" fill="none" viewBox="0 0 24 24">
+                          <path d="M12 5v14M12 19l-6-6M12 19l6-6" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                        <span className="text-red-500">{rankDelta} places from GW {selectedGameweek - 1}</span>
+                      </>
+                    ) : (
+                      <span className="text-gray-500">No change</span>
+                    )}
+                  </div>
+                )}
+                {rankDelta === null && (
+                  <div className="text-xs text-gray-400">No previous GW data</div>
+                )}
+              </div>
             </div>
           )}
         </div>
@@ -310,7 +412,7 @@ export default function FantasyPitch() {
                 >
                   <h3 className="font-bold mb-4 text-xl text-emerald-700 flex items-center gap-2">
                     <svg width="28" height="28" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#059669" /><text x="12" y="17" textAnchor="middle" fontSize="14" fill="#fff" fontWeight="bold">C</text></svg>
-                    Top 6 Captaincy Choices
+                    Top 6 Captaincy Choices For GW {selectedGameweek + 1}
                   </h3>
                   {captaincyLoading ? (
                     <div className="text-center text-lg font-semibold">Loading...</div>
@@ -409,16 +511,12 @@ export default function FantasyPitch() {
                       <circle cx="12" cy="12" r="10" fill="#2563eb" />
                       <text x="12" y="17" textAnchor="middle" fontSize="14" fill="#fff" fontWeight="bold">T</text>
                     </svg>
-                    Transfer Suggestions
+                    Top 3 Transfer Suggestions For GW {selectedGameweek + 1}
                   </h3>
-                  {/* Show free transfers and budget */}
+                  {/* Show only budget */}
                   <div className="flex flex-wrap gap-6 mb-6 justify-center">
-                    <div className="flex items-center gap-2 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-4 py-2 rounded-lg shadow">
-                      <span className="font-semibold">Free Transfers:</span>
-                      <span className="font-bold text-lg">{transferSuggestions.free_transfers ?? "-"}</span>
-                    </div>
                     <div className="flex items-center gap-2 bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 px-4 py-2 rounded-lg shadow">
-                      <span className="font-semibold">Budget:</span>
+                      <span className="font-semibold">Your Budget:</span>
                       <span className="font-bold text-lg">£{transferSuggestions.budget?.toFixed(1) ?? "-"}</span>
                       <span className="text-xs text-gray-500">m</span>
                     </div>
@@ -440,11 +538,11 @@ export default function FantasyPitch() {
                           : `https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_${inShirtNumber}-110.webp`;
                         const outPosLabel = positionMap[out.position || out.element_type] || "";
                         const inPosLabel = positionMap[inn.position || inn.element_type] || "";
-              
+
                         // Shared card classes for both out and in cards
                         const cardClass =
                           "flex items-center gap-4 bg-slate-900 dark:bg-slate-900 rounded-lg shadow-sm p-3 border-2 min-w-[270px] max-w-[320px] relative flex-1";
-              
+
                         return (
                           <div key={out.id + "-" + inn.id}
                             className="flex flex-col sm:flex-row items-center justify-center gap-2 mb-6"
