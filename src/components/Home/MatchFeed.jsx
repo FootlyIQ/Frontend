@@ -1,79 +1,364 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // ⬅️ Novo
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 
 export default function MatchFeed() {
   const [matchesData, setMatchesData] = useState([]);
   const [error, setError] = useState('');
-  const navigate = useNavigate(); // ⬅️ Novo
+  const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Get initial values from URL params or use defaults
+  const [selectedDate, setSelectedDate] = useState(
+    searchParams.get('date') || new Date().toISOString().split('T')[0]
+  );
+  const [selectedCountry, setSelectedCountry] = useState(searchParams.get('country') || 'all');
+  const [selectedLeague, setSelectedLeague] = useState(searchParams.get('league') || 'all');
 
   useEffect(() => {
     const fetchMatches = async () => {
+      setIsLoading(true);
       try {
-        const response = await axios.get('http://127.0.0.1:5000/matches');
+        const response = await axios.get(
+          `http://127.0.0.1:5000/matches${selectedDate ? `?date=${selectedDate}` : ''}`
+        );
         setMatchesData(response.data);
+        setError('');
       } catch (err) {
-        console.error('Napaka pri pridobivanju tekem:', err);
-        setError('Napaka pri nalaganju tekem.');
+        console.error('Error fetching matches:', err);
+        setError('Error loading matches.');
+      } finally {
+        setIsLoading(false);
       }
     };
 
     fetchMatches();
-  }, []);
+  }, [selectedDate]);
+
+  // Update URL params whenever filters change
+  useEffect(() => {
+    const params = new URLSearchParams();
+
+    // Only add non-default values to keep URL clean
+    if (selectedDate !== new Date().toISOString().split('T')[0]) {
+      params.set('date', selectedDate);
+    }
+    if (selectedCountry !== 'all') {
+      params.set('country', selectedCountry);
+    }
+    if (selectedLeague !== 'all') {
+      params.set('league', selectedLeague);
+    }
+
+    // Update URL without causing a page reload
+    setSearchParams(params, { replace: true });
+  }, [selectedDate, selectedCountry, selectedLeague, setSearchParams]);
+
+  const handleDateChange = (event) => {
+    setSelectedDate(event.target.value);
+  };
+
+  const handleCountryChange = (event) => {
+    setSelectedCountry(event.target.value);
+    setSelectedLeague('all'); // Reset league when country changes
+  };
+
+  const handleLeagueChange = (event) => {
+    setSelectedLeague(event.target.value);
+  };
+
+  const handleTodayClick = () => {
+    setSelectedDate(new Date().toISOString().split('T')[0]);
+  };
+
+  // Get unique countries for the dropdown
+  const countries = ['all', ...new Set(matchesData.map((country) => country.country))];
+
+  // Get leagues for the selected country
+  const leagues =
+    selectedCountry === 'all'
+      ? [
+          'all',
+          ...new Set(
+            matchesData.flatMap((country) => country.leagues.map((league) => league.league))
+          ),
+        ]
+      : [
+          'all',
+          ...new Set(
+            matchesData
+              .find((country) => country.country === selectedCountry)
+              ?.leagues.map((league) => league.league) || []
+          ),
+        ];
+
+  // Filter matches based on selection
+  const filteredMatches = matchesData
+    .filter((country) => selectedCountry === 'all' || country.country === selectedCountry)
+    .map((country) => ({
+      ...country,
+      leagues: country.leagues.filter(
+        (league) => selectedLeague === 'all' || league.league === selectedLeague
+      ),
+    }))
+    .filter((country) => country.leagues.length > 0);
+
+  // Loading skeleton component
+  const LoadingSkeleton = () => (
+    <div className="animate-pulse space-y-6">
+      {[1, 2, 3].map((country) => (
+        <div key={country} className="bg-white rounded-lg p-4 shadow-sm">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-8 h-5 bg-gray-200 rounded"></div>
+            <div className="h-6 w-48 bg-gray-200 rounded"></div>
+          </div>
+          <div className="space-y-4">
+            {[1, 2].map((league) => (
+              <div key={league} className="ml-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-6 h-6 bg-gray-200 rounded-full"></div>
+                  <div className="h-5 w-36 bg-gray-200 rounded"></div>
+                </div>
+                <div className="space-y-2">
+                  {[1, 2].map((match) => (
+                    <div key={match} className="h-16 bg-gray-100 rounded-lg"></div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  // Empty state component
+  const EmptyState = () => {
+    const isToday = selectedDate === new Date().toISOString().split('T')[0];
+
+    return (
+      <div className="bg-white rounded-lg shadow-sm p-8 text-center">
+        <div className="mb-4">
+          <svg
+            className="mx-auto h-12 w-12 text-gray-400"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            aria-hidden="true"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+            />
+          </svg>
+        </div>
+        <h3 className="text-lg font-medium text-gray-900 mb-2">No Matches Found</h3>
+        <p className="text-gray-500 mb-6">
+          {isToday
+            ? 'There are no matches scheduled for today.'
+            : 'There are no matches scheduled for the selected date.'}
+        </p>
+        {!isToday && (
+          <button
+            onClick={handleTodayClick}
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            View Today's Matches
+          </button>
+        )}
+      </div>
+    );
+  };
 
   return (
-    <section>
-      <h2 className="text-xl font-bold mb-4 text-gray-800">Today's matches</h2>
-      {error && <p className="text-red-500">{error}</p>}
-      {matchesData.length > 0 ? (
-        matchesData.map((league, leagueIdx) => (
-          <div key={leagueIdx} className="mb-6">
-            <h3 className="text-lg font-semibold mb-2 text-left text-gray-900">{league.league}</h3>
-            <div className="space-y-2">
-              {league.matches.map((match, matchIdx) => {
-                const isLive = match.status === 'LIVE';
-                return (
-                  <div
-                    key={matchIdx}
-                    onClick={() => navigate(`/match/${match.match_id}`)} // ⬅️ Novo
-                    className={`p-4 rounded-xl shadow-md hover:shadow-xl transition border-2 cursor-pointer ${
-                      isLive ? 'border-red-500 bg-yellow-200' : 'border-emerald-300 bg-stone-200'
-                    } flex items-center justify-between gap-4`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <img
-                        src={match.home_crest}
-                        alt={match.home_team}
-                        className="w-8 h-8 object-contain"
-                      />
-                      <span className="font-semibold">{match.home_team}</span>
-                    </div>
-
-                    <span className="text-gray-700 font-semibold mx-4">vs</span>
-
-                    <div className="flex items-center gap-2">
-                      <img
-                        src={match.away_crest}
-                        alt={match.away_team}
-                        className="w-8 h-8 object-contain"
-                      />
-                      <span className="font-semibold">{match.away_team}</span>
-                    </div>
-
-                    <div className="text-right">
-                      <p className="text-sm text-gray-600">
-                        {match.score === 'LIVE' ? 'LIVE' : match.score}
-                      </p>
-                      <p className="text-sm text-gray-500">{match.date}</p>
-                    </div>
-                  </div>
-                );
-              })}
+    <section className="max-w-7xl mx-auto">
+      {/* Filters Card */}
+      <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+        <div className="flex flex-col gap-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-bold text-gray-900">
+              {selectedDate === new Date().toISOString().split('T')[0]
+                ? "Today's Matches"
+                : 'Match Schedule'}
+            </h2>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={handleTodayClick}
+                className="text-blue-600 hover:text-blue-800 font-medium"
+              >
+                Today
+              </button>
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={handleDateChange}
+                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
             </div>
           </div>
-        ))
+
+          <div className="flex flex-wrap gap-4">
+            <div className="flex-1 min-w-[200px]">
+              <label
+                htmlFor="country-select"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Country
+              </label>
+              <select
+                id="country-select"
+                value={selectedCountry}
+                onChange={handleCountryChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                {countries.map((country) => (
+                  <option key={country} value={country}>
+                    {country === 'all' ? 'All Countries' : country}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex-1 min-w-[200px]">
+              <label
+                htmlFor="league-select"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                League
+              </label>
+              <select
+                id="league-select"
+                value={selectedLeague}
+                onChange={handleLeagueChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                {leagues.map((league) => (
+                  <option key={league} value={league}>
+                    {league === 'all' ? 'All Leagues' : league}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {error ? (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">{error}</div>
+      ) : isLoading ? (
+        <LoadingSkeleton />
+      ) : filteredMatches.length > 0 ? (
+        <div className="space-y-6">
+          {filteredMatches.map((countryData, countryIdx) => (
+            <div key={countryIdx} className="bg-white rounded-lg shadow-sm overflow-hidden">
+              {/* Country Header */}
+              {selectedCountry === 'all' && (
+                <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                  <div className="flex items-center gap-3">
+                    {countryData.flag && (
+                      <img
+                        src={countryData.flag}
+                        alt={`${countryData.country} flag`}
+                        className="w-8 h-5 object-contain"
+                      />
+                    )}
+                    <h2 className="text-xl font-semibold text-gray-900">{countryData.country}</h2>
+                  </div>
+                </div>
+              )}
+
+              {/* Leagues */}
+              <div className="divide-y divide-gray-100">
+                {countryData.leagues.map((leagueData, leagueIdx) => (
+                  <div key={leagueIdx} className="p-6">
+                    {/* League Header */}
+                    {selectedLeague === 'all' && (
+                      <div
+                        onClick={() => {
+                          if (leagueData.code) {
+                            navigate(`/competition/${leagueData.code}`);
+                          }
+                        }}
+                        className={`flex items-center gap-3 mb-4 ${
+                          leagueData.code ? 'cursor-pointer hover:text-blue-600' : ''
+                        }`}
+                      >
+                        {leagueData.emblem && (
+                          <img
+                            src={leagueData.emblem}
+                            alt={`${leagueData.league} emblem`}
+                            className="w-8 h-8 object-contain"
+                          />
+                        )}
+                        <h3 className="text-lg font-semibold">{leagueData.league}</h3>
+                      </div>
+                    )}
+
+                    {/* Matches */}
+                    <div className="space-y-3">
+                      {leagueData.matches.map((match, matchIdx) => (
+                        <div
+                          key={matchIdx}
+                          onClick={() => navigate(`/match/${match.match_id}`)}
+                          className="group bg-gray-50 hover:bg-gray-100 rounded-lg p-4 cursor-pointer transition-all duration-200"
+                        >
+                          <div className="grid grid-cols-7 items-center gap-4">
+                            {/* Home Team */}
+                            <div className="col-span-3 flex items-center justify-end gap-3">
+                              <span className="font-medium text-right">{match.home_team}</span>
+                              <img
+                                src={match.home_crest}
+                                alt={match.home_team}
+                                className="w-8 h-8 object-contain"
+                              />
+                            </div>
+
+                            {/* Score/Time */}
+                            <div className="col-span-1">
+                              <div className="flex flex-col items-center">
+                                <span
+                                  className={`font-bold ${
+                                    match.status === 'LIVE'
+                                      ? 'text-green-600'
+                                      : match.status === 'Finished'
+                                      ? 'text-gray-900'
+                                      : 'text-blue-600'
+                                  }`}
+                                >
+                                  {match.status === 'Scheduled' ? '-:-' : match.score}
+                                </span>
+                                <span className="text-xs text-gray-500">
+                                  {match.status === 'Scheduled'
+                                    ? match.date.split(' at ')[1]
+                                    : match.status}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Away Team */}
+                            <div className="col-span-3 flex items-center gap-3">
+                              <img
+                                src={match.away_crest}
+                                alt={match.away_team}
+                                className="w-8 h-8 object-contain"
+                              />
+                              <span className="font-medium">{match.away_team}</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
       ) : (
-        <p>Loading matches...</p>
+        <EmptyState />
       )}
     </section>
   );
