@@ -7,6 +7,7 @@ import Navbar from './components/Navbar';
 import Profile from './pages/Profile';
 import MatchDetail from './components/Home/MatchDetail';
 import PlayerPage from './pages/PlayerPage';
+import CompetitionDetails from './pages/CompetitionDetails';
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
             <Route path="/match/:matchId" element={<MatchDetail />} />
             <Route path="/team/:teamId" element={<ClubPage />} />
             <Route path="/player/:playerId" element={<PlayerPage />} />
+            <Route path="/competition/:code" element={<CompetitionDetails />} />
           </Routes>
         </main>
       </div>

@@ -56,30 +56,6 @@ function PlayerPage() {
     fetchPlayerData();
   }, [playerId]);
 
-  // Style objects for tabs
-  const tabButtonStyle = {
-    flex: 1,
-    padding: '0.75rem 1.5rem',
-    borderRadius: '12px',
-    border: 'none',
-    fontWeight: '600',
-    fontSize: '1rem',
-    cursor: 'pointer',
-    transition: 'all 0.3s ease',
-    boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-  };
-
-  const activeStyle = {
-    backgroundColor: '#0056b3',
-    color: '#fff',
-    boxShadow: '0 6px 10px rgba(0,86,179,0.4)',
-  };
-
-  const inactiveStyle = {
-    backgroundColor: '#e0e0e0',
-    color: '#333',
-  };
-
   // Calculate age from dateOfBirth
   const calculateAge = (dateOfBirth) => {
     const today = new Date();
@@ -93,201 +69,152 @@ function PlayerPage() {
   };
 
   return (
-    <div
-      style={{
-        margin: '2rem auto',
-        padding: '1rem',
-        fontFamily: 'Arial, sans-serif',
-        width: '100%',
-        maxWidth: '1200px',
-        boxSizing: 'border-box',
-      }}
-    >
+    <div className="p-4">
       {/* Player Header */}
       {playerDetails && (
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginBottom: '1.5rem',
-            gap: '2rem',
-          }}
-        >
-          {/* Player Image */}
+        <div className="flex items-center gap-4 mb-8">
           {playerDetails.image && (
             <img
               src={playerDetails.image}
               alt={playerDetails.name}
-              style={{
-                height: 120,
-                width: 'auto',
-                borderRadius: '10px',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-              }}
+              className="h-24 w-auto rounded-lg object-contain"
             />
           )}
-          <div style={{ textAlign: 'center' }}>
-            <h2 style={{ margin: '0 0 0.5rem 0' }}>{playerDetails.name}</h2>
-            <p style={{ margin: 0, color: '#666' }}>{playerDetails.position}</p>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">{playerDetails.name}</h1>
+            <div className="flex items-center gap-2 text-gray-600">
+              <span>{playerDetails.position}</span>
+              <span>•</span>
+              <span>{playerDetails.nationality}</span>
+            </div>
           </div>
         </div>
       )}
 
       {loading ? (
-        <p style={{ textAlign: 'center' }}>Loading...</p>
+        <div className="text-center p-4">Loading...</div>
       ) : error ? (
-        <div style={{ color: 'red', textAlign: 'center' }}>
-          <p>❌ {error}</p>
-        </div>
+        <div className="text-red-500 text-center p-4">❌ {error}</div>
       ) : (
         <>
           {/* Tabs */}
-          <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
-            <button
-              onClick={() => setActiveTab('details')}
-              style={{
-                ...tabButtonStyle,
-                ...(activeTab === 'details' ? activeStyle : inactiveStyle),
-              }}
-              onMouseEnter={(e) => {
-                if (activeTab !== 'details') e.currentTarget.style.backgroundColor = '#c8c8c8';
-              }}
-              onMouseLeave={(e) => {
-                if (activeTab !== 'details')
-                  e.currentTarget.style.backgroundColor = inactiveStyle.backgroundColor;
-              }}
-            >
-              Player Details
-            </button>
-            <button
-              onClick={() => setActiveTab('matches')}
-              style={{
-                ...tabButtonStyle,
-                ...(activeTab === 'matches' ? activeStyle : inactiveStyle),
-              }}
-              onMouseEnter={(e) => {
-                if (activeTab !== 'matches') e.currentTarget.style.backgroundColor = '#c8c8c8';
-              }}
-              onMouseLeave={(e) => {
-                if (activeTab !== 'matches')
-                  e.currentTarget.style.backgroundColor = inactiveStyle.backgroundColor;
-              }}
-            >
-              Matches & Stats
-            </button>
+          <div className="mb-6">
+            <div className="border-b border-gray-200">
+              <nav className="-mb-px flex space-x-8">
+                <button
+                  onClick={() => setActiveTab('details')}
+                  className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                    activeTab === 'details'
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  Player Details
+                </button>
+                <button
+                  onClick={() => setActiveTab('matches')}
+                  className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                    activeTab === 'matches'
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  Matches & Stats
+                </button>
+              </nav>
+            </div>
           </div>
 
           {/* Tab content */}
-          <div
-            style={{
-              backgroundColor: '#f9f9f9',
-              padding: '1.5rem',
-              borderRadius: '12px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-              width: '100%',
-              maxWidth: '1200px',
-              margin: '0 auto',
-              boxSizing: 'border-box',
-            }}
-          >
+          <div className="bg-white p-6 rounded-lg shadow">
             {activeTab === 'details' && playerDetails ? (
-              <div style={{ display: 'grid', gap: '2rem' }}>
+              <div className="space-y-6">
                 {/* Personal Information */}
                 <section>
-                  <h3 style={{ marginBottom: '1rem' }}>Personal Information</h3>
-                  <div
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-                      gap: '1rem',
-                    }}
-                  >
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Personal Information Column */}
                     <div>
-                      <p>
-                        <strong>Full Name:</strong> {playerDetails.firstName}{' '}
-                        {playerDetails.lastName}
-                      </p>
-                      <p>
-                        <strong>Age:</strong> {calculateAge(playerDetails.dateOfBirth)} years
-                      </p>
-                      <p>
-                        <strong>Date of Birth:</strong>{' '}
-                        {new Date(playerDetails.dateOfBirth).toLocaleDateString()}
-                      </p>
-                      <p>
-                        <strong>Nationality:</strong> {playerDetails.nationality}
-                      </p>
-                      <p>
-                        <strong>Position:</strong> {playerDetails.position}
-                      </p>
-                      <p>
-                        <strong>Shirt Number:</strong> {playerDetails.shirtNumber || 'N/A'}
-                      </p>
+                      <h3 className="text-xl font-semibold mb-4">Personal Information</h3>
+                      <div className="space-y-3">
+                        <p>
+                          <span className="font-medium">Full Name:</span> {playerDetails.firstName}{' '}
+                          {playerDetails.lastName}
+                        </p>
+                        <p>
+                          <span className="font-medium">Age:</span>{' '}
+                          {calculateAge(playerDetails.dateOfBirth)} years
+                        </p>
+                        <p>
+                          <span className="font-medium">Date of Birth:</span>{' '}
+                          {new Date(playerDetails.dateOfBirth).toLocaleDateString()}
+                        </p>
+                        <p>
+                          <span className="font-medium">Nationality:</span>{' '}
+                          {playerDetails.nationality}
+                        </p>
+                        <p>
+                          <span className="font-medium">Position:</span> {playerDetails.position}
+                        </p>
+                        <p>
+                          <span className="font-medium">Shirt Number:</span>{' '}
+                          {playerDetails.shirtNumber || 'N/A'}
+                        </p>
+                      </div>
                     </div>
+                    {/* Contract Information Column */}
                     <div>
+                      <h3 className="text-xl font-semibold mb-4">Contract Information</h3>
                       {playerDetails.contract ? (
-                        <>
-                          <h4 style={{ marginBottom: '0.5rem' }}>Contract Information</h4>
+                        <div className="space-y-3">
                           <p>
-                            <strong>Contract Start:</strong>{' '}
+                            <span className="font-medium">Contract Start:</span>{' '}
                             {playerDetails.contract.start || 'Not available'}
                           </p>
                           <p>
-                            <strong>Contract Until:</strong>{' '}
+                            <span className="font-medium">Contract Until:</span>{' '}
                             {playerDetails.contract.until || 'Not available'}
                           </p>
-                        </>
+                        </div>
                       ) : (
-                        <h4>Contract information not available</h4>
+                        <p className="text-gray-500">Contract information not available</p>
                       )}
                     </div>
                   </div>
                 </section>
               </div>
             ) : activeTab === 'matches' && playerMatches ? (
-              <div>
+              <div className="space-y-8">
                 {/* Player Statistics */}
-                <section style={{ marginBottom: '2rem' }}>
-                  <h3 style={{ marginBottom: '1rem' }}>Season Statistics</h3>
-                  <div
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-                      gap: '1rem',
-                      backgroundColor: '#fff',
-                      padding: '1rem',
-                      borderRadius: '8px',
-                      boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-                    }}
-                  >
-                    <div style={{ textAlign: 'center' }}>
-                      <p style={{ fontSize: '0.9rem', color: '#666' }}>Matches Played</p>
-                      <p style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>
+                <section>
+                  <h3 className="text-xl font-semibold mb-4">Season Statistics</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                    <div className="bg-gray-50 p-4 rounded-lg text-center">
+                      <p className="text-sm text-gray-600">Matches Played</p>
+                      <p className="text-2xl font-bold text-gray-900">
                         {playerMatches.stats.matchesOnPitch}
                       </p>
                     </div>
-                    <div style={{ textAlign: 'center' }}>
-                      <p style={{ fontSize: '0.9rem', color: '#666' }}>Starting XI</p>
-                      <p style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>
+                    <div className="bg-gray-50 p-4 rounded-lg text-center">
+                      <p className="text-sm text-gray-600">Starting XI</p>
+                      <p className="text-2xl font-bold text-gray-900">
                         {playerMatches.stats.startingXI}
                       </p>
                     </div>
-                    <div style={{ textAlign: 'center' }}>
-                      <p style={{ fontSize: '0.9rem', color: '#666' }}>Goals</p>
-                      <p style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>
+                    <div className="bg-gray-50 p-4 rounded-lg text-center">
+                      <p className="text-sm text-gray-600">Goals</p>
+                      <p className="text-2xl font-bold text-gray-900">
                         {playerMatches.stats.goals}
                       </p>
                     </div>
-                    <div style={{ textAlign: 'center' }}>
-                      <p style={{ fontSize: '0.9rem', color: '#666' }}>Assists</p>
-                      <p style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>
+                    <div className="bg-gray-50 p-4 rounded-lg text-center">
+                      <p className="text-sm text-gray-600">Assists</p>
+                      <p className="text-2xl font-bold text-gray-900">
                         {playerMatches.stats.assists}
                       </p>
                     </div>
-                    <div style={{ textAlign: 'center' }}>
-                      <p style={{ fontSize: '0.9rem', color: '#666' }}>Minutes Played</p>
-                      <p style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>
+                    <div className="bg-gray-50 p-4 rounded-lg text-center">
+                      <p className="text-sm text-gray-600">Minutes Played</p>
+                      <p className="text-2xl font-bold text-gray-900">
                         {playerMatches.stats.minutesPlayed}
                       </p>
                     </div>
@@ -296,77 +223,67 @@ function PlayerPage() {
 
                 {/* Match List */}
                 <section>
-                  <h3 style={{ marginBottom: '1rem' }}>Recent Matches</h3>
+                  <h3 className="text-xl font-semibold mb-4">Recent Matches</h3>
                   {playerMatches.matches.length > 0 ? (
-                    <ul style={{ listStyle: 'none', padding: 0 }}>
+                    <div className="space-y-3">
                       {playerMatches.matches.map((match, idx) => (
-                        <li
+                        <div
                           key={idx}
                           onClick={() => navigate(`/match/${match.match_id}`)}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            padding: '1rem',
-                            borderBottom: '1px solid #eee',
-                            gap: '1rem',
-                            backgroundColor: '#fff',
-                            marginBottom: '0.5rem',
-                            borderRadius: '8px',
-                            boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s ease',
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = '#f8f9fa';
-                            e.currentTarget.style.transform = 'translateY(-2px)';
-                            e.currentTarget.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = '#fff';
-                            e.currentTarget.style.transform = 'none';
-                            e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
-                          }}
+                          className="p-4 border rounded-lg hover:bg-gray-50 cursor-pointer transition-all duration-200"
                         >
-                          {/* Competition */}
-                          <div style={{ width: '40px' }}>
-                            <img
-                              src={match.competition.emblem}
-                              alt={match.competition.name}
-                              style={{ width: '30px', height: '30px' }}
-                            />
-                          </div>
+                          <div className="grid grid-cols-12 items-center gap-4">
+                            {/* Competition */}
+                            <div className="col-span-1">
+                              <img
+                                src={match.competition.emblem}
+                                alt={match.competition.name}
+                                className="w-8 h-8 object-contain"
+                                title={match.competition.name}
+                              />
+                            </div>
 
-                          {/* Teams */}
-                          <div
-                            style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '1rem' }}
-                          >
-                            <img
-                              src={match.homeTeam.crest}
-                              alt=""
-                              style={{ width: '25px', height: '25px' }}
-                            />
-                            <span>{match.homeTeam.name}</span>
-                            <strong>
-                              {match.homeTeam.score} - {match.awayTeam.score}
-                            </strong>
-                            <span>{match.awayTeam.name}</span>
-                            <img
-                              src={match.awayTeam.crest}
-                              alt=""
-                              style={{ width: '25px', height: '25px' }}
-                            />
-                          </div>
+                            {/* Teams and Score */}
+                            <div className="col-span-9 grid grid-cols-7 items-center">
+                              {/* Home Team */}
+                              <div className="col-span-3 flex items-center justify-end gap-2">
+                                <span className="font-medium text-right">
+                                  {match.homeTeam.name}
+                                </span>
+                                <img
+                                  src={match.homeTeam.crest}
+                                  alt={match.homeTeam.name}
+                                  className="w-6 h-6 object-contain"
+                                />
+                              </div>
 
-                          {/* Date and Status */}
-                          <div style={{ textAlign: 'right', minWidth: '150px' }}>
-                            <div style={{ fontSize: '0.9rem' }}>{match.date}</div>
-                            <div style={{ fontSize: '0.8rem', color: '#666' }}>{match.status}</div>
+                              {/* Score */}
+                              <div className="col-span-1 text-center font-bold px-2">
+                                {match.homeTeam.score} - {match.awayTeam.score}
+                              </div>
+
+                              {/* Away Team */}
+                              <div className="col-span-3 flex items-center justify-start gap-2">
+                                <img
+                                  src={match.awayTeam.crest}
+                                  alt={match.awayTeam.name}
+                                  className="w-6 h-6 object-contain"
+                                />
+                                <span className="font-medium text-left">{match.awayTeam.name}</span>
+                              </div>
+                            </div>
+
+                            {/* Date and Status */}
+                            <div className="col-span-2 text-right">
+                              <div className="text-sm text-gray-600">{match.date}</div>
+                              <div className="text-xs text-gray-500">{match.status}</div>
+                            </div>
                           </div>
-                        </li>
+                        </div>
                       ))}
-                    </ul>
+                    </div>
                   ) : (
-                    <p>No match data available.</p>
+                    <p className="text-gray-500">No match data available.</p>
                   )}
                 </section>
               </div>

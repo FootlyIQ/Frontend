@@ -163,380 +163,381 @@ function ClubPage() {
         boxSizing: 'border-box',
       }}
     >
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          marginBottom: '1.5rem',
-          gap: '1rem', // spacing between logo and team name
-        }}
-      >
-        {teamCrest && (
-          <img src={teamCrest} alt={`${teamName} logo`} style={{ height: 80, width: 'auto' }} />
-        )}
-        <h2 style={{ margin: 0 }}>{teamName || `Club ${teamId}`}</h2>
-      </div>
-
-      {loading ? (
-        <p style={{ textAlign: 'center' }}>Loading...</p>
-      ) : error ? (
-        <div style={{ color: 'red', textAlign: 'center' }}>
-          <p>❌ {error}</p>
+      <div className="p-4">
+        {/* Team Header */}
+        <div className="flex items-center gap-4 mb-8">
+          {teamCrest && (
+            <img src={teamCrest} alt={`${teamName} logo`} className="h-16 w-auto object-contain" />
+          )}
+          <h1 className="text-2xl font-bold text-gray-900">{teamName || `Club ${teamId}`}</h1>
         </div>
-      ) : (
-        <>
-          {/* Tabs */}
-          <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
-            <button
-              onClick={() => setActiveTab('fixtures')}
-              style={{
-                ...tabButtonStyle,
-                ...(activeTab === 'fixtures' ? activeStyle : inactiveStyle),
-              }}
-              onMouseEnter={(e) => {
-                if (activeTab !== 'fixtures') e.currentTarget.style.backgroundColor = '#c8c8c8';
-              }}
-              onMouseLeave={(e) => {
-                if (activeTab !== 'fixtures')
-                  e.currentTarget.style.backgroundColor = inactiveStyle.backgroundColor;
-              }}
-            >
-              Fixtures
-            </button>
-            <button
-              onClick={() => setActiveTab('squad')}
-              style={{
-                ...tabButtonStyle,
-                ...(activeTab === 'squad' ? activeStyle : inactiveStyle),
-              }}
-              onMouseEnter={(e) => {
-                if (activeTab !== 'squad') e.currentTarget.style.backgroundColor = '#c8c8c8';
-              }}
-              onMouseLeave={(e) => {
-                if (activeTab !== 'squad')
-                  e.currentTarget.style.backgroundColor = inactiveStyle.backgroundColor;
-              }}
-            >
-              Squad
-            </button>
+
+        {loading ? (
+          <div className="text-center p-4">Loading...</div>
+        ) : error ? (
+          <div className="text-red-500 text-center p-4">
+            <p>❌ {error}</p>
           </div>
+        ) : (
+          <>
+            {/* Tabs */}
+            <div className="mb-6">
+              <div className="border-b border-gray-200">
+                <nav className="-mb-px flex space-x-8">
+                  <button
+                    onClick={() => setActiveTab('fixtures')}
+                    className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                      activeTab === 'fixtures'
+                        ? 'border-blue-500 text-blue-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    Fixtures & Results
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('squad')}
+                    className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                      activeTab === 'squad'
+                        ? 'border-blue-500 text-blue-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    Team Squad
+                  </button>
+                </nav>
+              </div>
+            </div>
 
-          {/* Tab content */}
-          <div
-            style={{
-              backgroundColor: '#f9f9f9',
-              padding: '1.5rem',
-              borderRadius: '12px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-              width: '100%',
-              maxWidth: '1200px',
-              margin: '0 auto',
-              boxSizing: 'border-box',
-            }}
-          >
-            {activeTab === 'fixtures' ? (
-              <>
-                <div
-                  style={{
-                    display: 'flex',
-                    gap: '1rem',
-                    marginBottom: '1.5rem',
-                    alignItems: 'center',
-                  }}
-                >
-                  <select
-                    value={selectedSeason || ''}
-                    onChange={(e) => setSelectedSeason(e.target.value)}
+            {/* Tab content */}
+            <div className="bg-white p-6 rounded-lg shadow">
+              {activeTab === 'fixtures' ? (
+                <>
+                  <div
                     style={{
-                      padding: '0.5rem',
-                      borderRadius: '8px',
-                      border: '1px solid #ccc',
-                      minWidth: '150px',
+                      display: 'flex',
+                      gap: '1rem',
+                      marginBottom: '1.5rem',
+                      alignItems: 'center',
                     }}
                   >
-                    {/* Filter unique seasons by year */}
-                    {Array.from(new Set(filters.seasons.map((season) => season.year))).map(
-                      (year) => (
-                        <option key={year} value={year}>
-                          {year}
+                    <select
+                      value={selectedSeason || ''}
+                      onChange={(e) => setSelectedSeason(e.target.value)}
+                      style={{
+                        padding: '0.5rem',
+                        borderRadius: '8px',
+                        border: '1px solid #ccc',
+                        minWidth: '150px',
+                      }}
+                    >
+                      {/* Filter unique seasons by year */}
+                      {Array.from(new Set(filters.seasons.map((season) => season.year))).map(
+                        (year) => (
+                          <option key={year} value={year}>
+                            {year}
+                          </option>
+                        )
+                      )}
+                    </select>
+
+                    <select
+                      value={selectedCompetition || ''}
+                      onChange={(e) => setSelectedCompetition(e.target.value)}
+                      style={{
+                        padding: '0.5rem',
+                        borderRadius: '8px',
+                        border: '1px solid #ccc',
+                        minWidth: '200px',
+                      }}
+                    >
+                      {filters.competitions.map((comp) => (
+                        <option key={comp.id} value={comp.id}>
+                          {comp.name}
                         </option>
-                      )
-                    )}
-                  </select>
+                      ))}
+                    </select>
+                  </div>
 
-                  <select
-                    value={selectedCompetition || ''}
-                    onChange={(e) => setSelectedCompetition(e.target.value)}
-                    style={{
-                      padding: '0.5rem',
-                      borderRadius: '8px',
-                      border: '1px solid #ccc',
-                      minWidth: '200px',
-                    }}
-                  >
-                    {filters.competitions.map((comp) => (
-                      <option key={comp.id} value={comp.id}>
-                        {comp.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <h3 style={{ marginBottom: '1rem' }}>Matches</h3>
-                {fixtures.length > 0 ? (
-                  <ul style={{ listStyle: 'none', padding: 0 }}>
-                    {fixtures.map((match, idx) => (
-                      <li
-                        key={idx}
-                        onClick={() => navigate(`/match/${match.match_id}`)}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'flex-start',
-                          padding: '1rem',
-                          borderBottom: '1px solid #ccc',
-                          gap: '1rem',
-                          width: '100%',
-                          boxSizing: 'border-box',
-                          flexWrap: 'wrap',
-                          backgroundColor: '#fff',
-                          borderRadius: '8px',
-                          marginBottom: '0.5rem',
-                          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s ease',
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = '#f8f9fa';
-                          e.currentTarget.style.transform = 'translateY(-2px)';
-                          e.currentTarget.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = '#fff';
-                          e.currentTarget.style.transform = 'none';
-                          e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
-                        }}
-                      >
-                        {/* Date */}
-                        <div style={{ minWidth: 80, flexShrink: 0 }}>
-                          <strong>{match.date}</strong>
-                        </div>
-
-                        {/* Teams + score */}
+                  <h3 style={{ marginBottom: '1rem' }}>Matches</h3>
+                  {fixtures.length > 0 ? (
+                    <div className="space-y-3">
+                      {fixtures.map((match, idx) => (
                         <div
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.5rem',
-                            flexGrow: 2,
-                            flexBasis: '50%',
-                            overflow: 'hidden',
-                            flexWrap: 'nowrap',
-                          }}
+                          key={idx}
+                          onClick={() => navigate(`/match/${match.match_id}`)}
+                          className="bg-white p-4 border rounded-lg hover:bg-gray-50 transition-all duration-200 cursor-pointer"
                         >
-                          <img src={match.home_crest} alt="" style={{ height: 30 }} />
-                          <span style={{ fontWeight: 500 }}>{match.home_team}</span>
-                          <strong style={{ minWidth: 40, textAlign: 'center' }}>
-                            {match.score}
-                          </strong>
-                          <span style={{ fontWeight: 500 }}>{match.away_team}</span>
-                          <img src={match.away_crest} alt="" style={{ height: 30 }} />
-                        </div>
-
-                        {/* League info */}
-                        <div
-                          style={{
-                            display: 'flex',
-                            width: '25%',
-                            marginRight: '1rem',
-                          }}
-                        >
-                          <div style={{ flexBasis: '8%', minWidth: 80, fontSize: '0.85rem' }}>
-                            <div>
-                              <strong>Matchday:</strong> {match.matchday || 'N/A'}
-                            </div>
-                            <div>{formatStage(match.stage)}</div>
-                          </div>
-
-                          <div
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              flexGrow: 1,
-                              minWidth: 100,
-                              gap: '0.25rem',
-                            }}
-                          >
-                            {match.competition_logo && (
-                              <img src={match.competition_logo} alt="" style={{ height: 30 }} />
-                            )}
-                            <span
-                              style={{
-                                fontWeight: 'bold',
-                                whiteSpace: 'nowrap',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
+                          <div className="grid grid-cols-12 items-center gap-4">
+                            {/* Competition Info */}
+                            <div
+                              className="col-span-3 flex items-center gap-3 cursor-pointer hover:bg-gray-100 p-2 rounded"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (match.competition_code) {
+                                  navigate(`/competition/${match.competition_code}`);
+                                }
                               }}
+                              title={`View ${match.competition_name} details`}
                             >
-                              {match.competition_name}
-                            </span>
+                              <img
+                                src={match.competition_logo}
+                                alt={match.competition_name}
+                                className="w-8 h-8 object-contain"
+                              />
+                              <span className="font-medium text-gray-700 truncate">
+                                {match.competition_name}
+                              </span>
+                            </div>
+
+                            {/* Teams and Score */}
+                            <div className="col-span-6 grid grid-cols-7 items-center gap-2">
+                              {/* Home Team */}
+                              <div className="col-span-3 flex items-center justify-end gap-2">
+                                <span className="font-medium text-right">{match.home_team}</span>
+                                <img
+                                  src={match.home_crest}
+                                  alt={match.home_team}
+                                  className="w-6 h-6 object-contain"
+                                />
+                              </div>
+
+                              {/* Score */}
+                              <div className="col-span-1 text-center font-bold px-2">
+                                {match.score}
+                              </div>
+
+                              {/* Away Team */}
+                              <div className="col-span-3 flex items-center justify-start gap-2">
+                                <img
+                                  src={match.away_crest}
+                                  alt={match.away_team}
+                                  className="w-6 h-6 object-contain"
+                                />
+                                <span className="font-medium text-left">{match.away_team}</span>
+                              </div>
+                            </div>
+
+                            {/* Match Info */}
+                            <div className="col-span-3 text-right space-y-1">
+                              {/* Matchday Info */}
+                              <div className="text-sm text-gray-600">
+                                {match.matchday && (
+                                  <span className="font-medium">
+                                    Matchday {match.matchday}
+                                    {match.stage && match.stage !== 'REGULAR_SEASON' && (
+                                      <span className="text-gray-500 ml-1">
+                                        • {formatStage(match.stage)}
+                                      </span>
+                                    )}
+                                  </span>
+                                )}
+                              </div>
+                              {/* Date */}
+                              <div className="text-sm text-gray-600">{match.date}</div>
+                            </div>
                           </div>
                         </div>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p>No matches available.</p>
-                )}
-              </>
-            ) : (
-              <>
-                <h3 style={{ marginBottom: '1rem' }}>Squad Members</h3>
-                {squad.length > 0 ? (
-                  <>
-                    {console.log('Unique positions:', [...new Set(squad.map((p) => p.position))])}
-
-                    <ul style={{ listStyle: 'none', padding: 0 }}>
-                      {/* Coach section */}
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-500 text-center">No matches available.</p>
+                  )}
+                </>
+              ) : (
+                <>
+                  <h3 className="text-xl font-semibold mb-6">Squad Members</h3>
+                  {squad.length > 0 ? (
+                    <div className="space-y-8">
+                      {/* Manager section */}
                       {squad
                         .filter((player) => player.position === 'Manager')
                         .map((player, idx) => (
-                          <li
+                          <div
                             key={`coach-${idx}`}
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'flex-start',
-                              padding: '1rem',
-                              borderBottom: '1px solid #ccc',
-                              gap: '1rem',
-                              width: '100%',
-                              boxSizing: 'border-box',
-                              position: 'relative',
-                              backgroundColor: '#f8f9fa',
-                            }}
+                            className="bg-gradient-to-r from-blue-50 to-white p-6 rounded-lg shadow-sm border border-blue-100"
                           >
-                            <div style={{ display: 'flex', flexDirection: 'column' }}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                <strong>{player.name}</strong>
-                                <span
-                                  style={{
-                                    backgroundColor: '#0056b3',
-                                    color: 'white',
-                                    padding: '2px 8px',
-                                    borderRadius: '4px',
-                                    fontSize: '0.8rem',
-                                  }}
-                                >
+                            <div className="flex flex-col">
+                              <div className="flex items-center gap-3 mb-2">
+                                <span className="text-xl font-bold text-gray-900">
+                                  {player.name}
+                                </span>
+                                <span className="bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-medium">
                                   Head Coach
                                 </span>
                               </div>
-                              <span>Nationality: {player.nationality}</span>
+                              <span className="text-gray-600">
+                                <span className="font-medium">Nationality:</span>{' '}
+                                {player.nationality}
+                              </span>
                             </div>
-                          </li>
+                          </div>
                         ))}
 
-                      {/* Goalkeeper section */}
-                      <h4 style={{ marginTop: '1.5rem', marginBottom: '0.5rem' }}>Goalkeepers</h4>
-                      {squad
-                        .filter((player) => player.position === 'Goalkeeper')
-                        .map((player, idx) => (
-                          <PlayerListItem key={`gk-${idx}`} player={player} navigate={navigate} />
-                        ))}
+                      {/* Players sections */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Goalkeepers */}
+                        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                          <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                            <svg
+                              className="w-5 h-5 text-yellow-500"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path d="M10 2a8 8 0 100 16 8 8 0 000-16zM6.5 9.5a3.5 3.5 0 117 0 3.5 3.5 0 01-7 0z" />
+                            </svg>
+                            Goalkeepers
+                          </h4>
+                          <div className="space-y-3">
+                            {squad
+                              .filter((player) => player.position === 'Goalkeeper')
+                              .map((player, idx) => (
+                                <PlayerCard key={`gk-${idx}`} player={player} navigate={navigate} />
+                              ))}
+                          </div>
+                        </div>
 
-                      {/* Defender section */}
-                      <h4 style={{ marginTop: '1.5rem', marginBottom: '0.5rem' }}>Defenders</h4>
-                      {squad
-                        .filter(
-                          (player) =>
-                            player.position === 'Defence' ||
-                            player.position === 'Centre-Back' ||
-                            player.position === 'Left-Back' ||
-                            player.position === 'Right-Back'
-                        )
-                        .map((player, idx) => (
-                          <PlayerListItem key={`def-${idx}`} player={player} navigate={navigate} />
-                        ))}
+                        {/* Defenders */}
+                        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                          <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                            <svg
+                              className="w-5 h-5 text-blue-500"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
+                              <path
+                                fillRule="evenodd"
+                                d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                            Defenders
+                          </h4>
+                          <div className="space-y-3">
+                            {squad
+                              .filter((player) =>
+                                ['Defence', 'Centre-Back', 'Left-Back', 'Right-Back'].includes(
+                                  player.position
+                                )
+                              )
+                              .map((player, idx) => (
+                                <PlayerCard
+                                  key={`def-${idx}`}
+                                  player={player}
+                                  navigate={navigate}
+                                />
+                              ))}
+                          </div>
+                        </div>
 
-                      {/* Midfielder section */}
-                      <h4 style={{ marginTop: '1.5rem', marginBottom: '0.5rem' }}>Midfielders</h4>
-                      {squad
-                        .filter(
-                          (player) =>
-                            player.position === 'Midfield' ||
-                            player.position === 'Central Midfield' ||
-                            player.position === 'Defensive Midfield' ||
-                            player.position === 'Attacking Midfield'
-                        )
-                        .map((player, idx) => (
-                          <PlayerListItem key={`mid-${idx}`} player={player} navigate={navigate} />
-                        ))}
+                        {/* Midfielders */}
+                        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                          <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                            <svg
+                              className="w-5 h-5 text-green-500"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 1.414L10.586 9H7a1 1 0 100 2h3.586l-1.293 1.293a1 1 0 101.414 1.414l3-3a1 1 0 000-1.414z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                            Midfielders
+                          </h4>
+                          <div className="space-y-3">
+                            {squad
+                              .filter((player) =>
+                                [
+                                  'Midfield',
+                                  'Central Midfield',
+                                  'Defensive Midfield',
+                                  'Attacking Midfield',
+                                ].includes(player.position)
+                              )
+                              .map((player, idx) => (
+                                <PlayerCard
+                                  key={`mid-${idx}`}
+                                  player={player}
+                                  navigate={navigate}
+                                />
+                              ))}
+                          </div>
+                        </div>
 
-                      {/* Forward section */}
-                      <h4 style={{ marginTop: '1.5rem', marginBottom: '0.5rem' }}>Forwards</h4>
-                      {squad
-                        .filter(
-                          (player) =>
-                            player.position === 'Offence' ||
-                            player.position === 'Centre-Forward' ||
-                            player.position === 'Left Winger' ||
-                            player.position === 'Right Winger'
-                        )
-                        .map((player, idx) => (
-                          <PlayerListItem key={`att-${idx}`} player={player} navigate={navigate} />
-                        ))}
-                    </ul>
-                  </>
-                ) : (
-                  <p>No squad data available.</p>
-                )}
-              </>
-            )}
-          </div>
-        </>
-      )}
+                        {/* Forwards */}
+                        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                          <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                            <svg
+                              className="w-5 h-5 text-red-500"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                            Forwards
+                          </h4>
+                          <div className="space-y-3">
+                            {squad
+                              .filter((player) =>
+                                [
+                                  'Offence',
+                                  'Centre-Forward',
+                                  'Left Winger',
+                                  'Right Winger',
+                                ].includes(player.position)
+                              )
+                              .map((player, idx) => (
+                                <PlayerCard
+                                  key={`att-${idx}`}
+                                  player={player}
+                                  navigate={navigate}
+                                />
+                              ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-gray-500 text-center">No squad data available.</p>
+                  )}
+                </>
+              )}
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }
 
-const PlayerListItem = ({ player, navigate }) => (
-  <li
-    style={{
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'flex-start',
-      padding: '1rem',
-      borderBottom: '1px solid #ccc',
-      gap: '1rem',
-      width: '100%',
-      boxSizing: 'border-box',
-      position: 'relative',
-    }}
-  >
-    <div style={{ position: 'absolute', left: '-100px' }}>
+const PlayerCard = ({ player, navigate }) => (
+  <div className="group relative bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-all duration-200">
+    <div className="flex justify-between items-start">
+      <div className="space-y-1">
+        <h5 className="font-semibold text-gray-900 group-hover:text-blue-600">{player.name}</h5>
+        <p className="text-sm text-gray-600">
+          <span className="font-medium">Position:</span> {player.position}
+        </p>
+        <p className="text-sm text-gray-600">
+          <span className="font-medium">Nationality:</span> {player.nationality}
+        </p>
+      </div>
       {player.id && (
         <button
-          style={{
-            padding: '0.4rem 0.8rem',
-            borderRadius: '8px',
-            backgroundColor: '#28a745',
-            color: '#fff',
-            border: 'none',
-            cursor: 'pointer',
-          }}
           onClick={() => navigate(`/player/${player.id}`)}
+          className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
         >
-          Info
+          View Profile
         </button>
       )}
     </div>
-    <div style={{ display: 'flex', flexDirection: 'column' }}>
-      <strong>{player.name}</strong>
-      <span>Position: {player.position}</span>
-      <span>Nationality: {player.nationality}</span>
-    </div>
-  </li>
+  </div>
 );
 
 export default ClubPage;
