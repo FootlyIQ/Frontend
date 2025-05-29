@@ -1,0 +1,41 @@
+.fantasy-container {
+  text-align: center;
+  padding: 20px;
+}
+
+.controls {
+  margin-bottom: 20px;
+}
+
+.pitch {
+  background: #0b6623;
+  border-radius: 12px;
+  padding: 20px;
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  box-shadow: 0 0 10px #00000055;
+}
+
+.line {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 20px 0;
+}
+
+.player {
+  background: #fff;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-weight: bold;
+  box-shadow: 0 0 5px #00000044;
+}
+
+.captain {
+  background: gold;
+}
+
+.vice {
+  background: silver;
+}
