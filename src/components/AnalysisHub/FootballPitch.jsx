@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import * as d3 from "d3";
 import clusterDescriptions from "./cluster_descriptions.json";
 import lastThirdDesc from "./last_third_desc.json";
+import styles from './pitch.module.css';
 
 const FootballPitch = ({ width = 700, height = 453 }) => {
     const [passes, setPasses] = useState([]);
@@ -17,7 +18,7 @@ const FootballPitch = ({ width = 700, height = 453 }) => {
 
     const xScale = d3.scaleLinear().domain([0, pitchWidth]).range([0, width]);
     const yScale = d3.scaleLinear().domain([0, pitchHeight]).range([0, height]);
-    const colorScale = d3.scaleOrdinal(d3.schemeCategory10);
+    const colorScale = d3.scaleOrdinal(d3.schemeSet1);
     // Extract unique cluster labels from the fetched passes
     const uniqueLabels = Array.from(new Set(passes.map(p => p.label)));
 
@@ -216,26 +217,47 @@ const FootballPitch = ({ width = 700, height = 453 }) => {
 
                 {/* Conditionally render legend */}
                 {passes.length > 0 && (
-                    <div style={{ marginTop: 20 }}>
-                        <h3 style={{ color: "white" }}>Pass Cluster Legend</h3>
-                        <ul style={{ listStyle: "none", padding: 0 }}>
-                            {uniqueLabels.map(label => (
-                                <li key={label} style={{ color: colorScale(label), marginBottom: "4px" }}>
-                                    <strong>Cluster {label + 1}:</strong> {descriptions[label] || "Description not available"}
-                                </li>
-                            ))}
+                    <div className={styles.legendContainer}>
+                        <h3 className={styles.legendTitle}>Pass Cluster Legend</h3>
+                        <ul className={styles.legendList}>
+                        {uniqueLabels.map((label) => (
+                            <li key={label} className={styles.legendItem}>
+                            <strong
+                                className={styles.clusterLabel}
+                                style={{ color: colorScale(label) }}
+                            >
+                                Cluster {label + 1}:
+                            </strong>
+                            {descriptions[label] || "Description not available"}
+                            </li>
+                        ))}
                         </ul>
                     </div>
                 )}
+                {/*
+                    {passes.length > 0 && (
+                        <div style={{ marginTop: 20 }}>
+                            <h3 style={{ color: "white" }}>Pass Cluster Legend</h3>
+                            <ul style={{ listStyle: "none", padding: 0 }}>
+                                {uniqueLabels.map(label => (
+                                    <li key={label} style={{ color: colorScale(label), marginBottom: "4px" }}>
+                                        <strong>Cluster {label + 1}:</strong> {descriptions[label] || "Description not available"}
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+                */}
+                
             </section>
 
-            <aside className="hidden lg:block w-80 bg-slate-700 p-6">
-                <label htmlFor="team-select">Select Team:</label>
+            <aside className={styles.sidebar}>
+                <label htmlFor="team-select" className={styles.label}>Select Team:</label>
                 <select
                     id="team-select"
                     value={selectedTeam}
                     onChange={(e) => setSelectedTeam(e.target.value)}
-                    style={{ marginLeft: "10px", padding: "5px" }}
+                    className={styles.select}
                 >
                     <option value="Arsenal">Arsenal</option>
                     <option value="Aston Villa">Aston Villa</option>
@@ -261,56 +283,56 @@ const FootballPitch = ({ width = 700, height = 453 }) => {
                     <option value="West Ham United">West Ham United</option>
                     <option value="Wolverhampton Wanderers">Wolverhampton</option>
                 </select>
-                <button onClick={fetchPasses} className="bg-white text-black px-4 py-2 rounded hover:bg-gray-200 transition">
+                <button onClick={fetchPasses} className={styles.button}>
                     Show Most Common Passes
                 </button>
-                <button onClick={fetchLastThirdPasses} className="bg-white text-black px-4 py-2 rounded hover:bg-gray-200 transition">
+                <button onClick={fetchLastThirdPasses} className={styles.button}>
                     Show Last 3rd Passes
                 </button>
 
                 {/*filtering*/}
-                <div className="mt-4">
-                    <label className="block">
+                <div className={styles.filterGroup}>
+                    <label className={styles.checkboxLabel}>
                         <input
                             type="checkbox"
                             checked={isSuccessful}
                             onChange={(e) => setIsSuccessful(e.target.checked)}
-                            className="mr-2"
+                            className={styles.checkbox}
                         />
                         Successful Pass
                     </label>
 
-                    <label className="block mt-2">
+                    <label className={styles.checkboxLabel}>
                         <input
                             type="checkbox"
                             checked={isHighPass}
                             onChange={(e) => setIsHighPass(e.target.checked)}
-                            className="mr-2"
+                            className={styles.checkbox}
                         />
                         High Pass
                     </label>
 
-                    <label className="block mt-2">
+                    <label className={styles.checkboxLabel}>
                         <input
                             type="checkbox"
                             checked={isLongPass}
                             onChange={(e) => setIsLongPass(e.target.checked)}
-                            className="mr-2"
+                            className={styles.checkbox}
                         />
                         Long Pass
                     </label>
 
-                    <label className="block mt-4">
+                    <label className={styles.inputLabel}>
                         Min Pass Length:
                         <input
                             type="number"
                             value={minPassLength}
                             onChange={(e) => setMinPassLength(e.target.value)}
-                            className="block mt-1 w-full p-1 text-black"
+                            className={styles.input}
                         />
                     </label>
                 </div>
-                <button onClick={fetchFilteredPasses} className="bg-white text-black px-4 py-2 rounded hover:bg-gray-200 transition">
+                <button onClick={fetchFilteredPasses} className={styles.button}>
                     Apply Filters
                 </button>
             </aside>

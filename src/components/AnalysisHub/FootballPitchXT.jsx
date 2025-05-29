@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import * as d3 from "d3";
+import styles from './pitch.module.css';
 
 
 const FootballPitchXT = ({ width = 700, height = 453 }) => {
@@ -364,13 +365,13 @@ const FootballPitchXT = ({ width = 700, height = 453 }) => {
 
             </section>
 
-            <aside className="hidden lg:block w-80 bg-slate-700 p-6">
-                <label htmlFor="team-select">Select Team:</label>
+            <aside className={styles.sidebar}>
+                <label htmlFor="team-select" className={styles.label}>Select Team:</label>
                 <select
                     id="team-select"
                     value={selectedTeam}
                     onChange={(e) => setSelectedTeam(e.target.value)}
-                    style={{ marginLeft: "10px", padding: "5px" }}
+                    className={styles.select}
                 >
                     <option value="Arsenal">Arsenal</option>
                     <option value="Aston Villa">Aston Villa</option>
@@ -396,15 +397,13 @@ const FootballPitchXT = ({ width = 700, height = 453 }) => {
                     <option value="West Ham United">West Ham United</option>
                     <option value="Wolverhampton Wanderers">Wolverhampton</option>
                 </select>
-                <button onClick={fetchMovingXT} disabled={loading} className="bg-white text-black px-4 py-2 rounded hover:bg-gray-200 transition">
+                <button onClick={fetchMovingXT} disabled={loading} className={styles.button}>
                     Show xT Map
                 </button>
-                <br />
-                <button onClick={fetchShotsXT} disabled={loading} className="bg-white text-black px-4 py-2 rounded hover:bg-gray-200 transition">
+                <button onClick={fetchShotsXT} disabled={loading} className={styles.button}>
                     Show Shots Map
                 </button>
-                <br />
-                <button onClick={fetchShotProb} disabled={loading} className="bg-white text-black px-4 py-2 rounded hover:bg-gray-200 transition">
+                <button onClick={fetchShotProb} disabled={loading} className={styles.button}>
                     Show Shot Probability Map
                 </button>
             </aside>
