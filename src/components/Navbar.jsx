@@ -29,7 +29,7 @@ export default function Navbar() {
                 <li className="hover:text-emerald-500 cursor-pointer">Players</li>
                 <li><Link to="/fantasy" className="hover:text-emerald-500">Fantasy</Link></li>
                 <li><Link to="/analysis" className="hover:text-emerald-500">Analysis Hub</Link></li>
-                <li className="hover:text-emerald-500 cursor-pointer">Predictions</li>
+                <li><Link to="/betting" className="hover:text-emerald-500">Betting</Link></li>
                 <li><Link to="/profile" className="hover:text-emerald-500">Profile</Link></li>
             </ul>
         </nav>
