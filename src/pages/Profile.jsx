@@ -11,6 +11,7 @@ import {
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { useFavorites } from '../hooks/useFavorites';
 import { useNavigate } from 'react-router-dom';
+import { useMatchNotifications } from '../hooks/useMatchNotifications';
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -20,6 +21,7 @@ export default function Profile() {
   const [isRegistering, setIsRegistering] = useState(false);
   const [teamId, setTeamId] = useState('');
   const { favorites, removeMatchFromFavorites, removeClubFromFavorites } = useFavorites();
+  const { isMonitoring, startMonitoring, stopMonitoring } = useMatchNotifications();
 
   // Preveri stanje prijave ob nalaganju strani
   useEffect(() => {
@@ -217,6 +219,104 @@ export default function Profile() {
             >
               {teamId ? 'Update Fantasy Team ID' : 'Save Fantasy Team ID'}
             </button>
+          </div>
+
+          {/* Notification Settings Section */}
+          <div className="mb-6 p-4 bg-gray-700 rounded-lg">
+            <h3 className="text-lg font-semibold mb-3">🔔 Real-time Notifications</h3>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="font-medium">Live Match Updates</div>
+                  <div className="text-sm text-gray-400">
+                    Get notified when your favorite matches have score changes
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {isMonitoring ? (
+                    <div className="flex items-center gap-2 text-green-400">
+                      <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                      <span className="text-sm">Active</span>
+                    </div>
+                  ) : (
+                    <span className="text-sm text-gray-400">Inactive</span>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="font-medium">Club Match Alerts</div>
+                  <div className="text-sm text-gray-400">
+                    Get notified when your favorite clubs' matches start
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {isMonitoring ? (
+                    <div className="flex items-center gap-2 text-green-400">
+                      <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                      <span className="text-sm">Active</span>
+                    </div>
+                  ) : (
+                    <span className="text-sm text-gray-400">Inactive</span>
+                  )}
+                </div>
+              </div>
+
+              {favorites.matches.length === 0 && favorites.clubs.length === 0 && (
+                <div className="bg-gray-600 p-3 rounded text-center text-sm text-gray-400">
+                  ⭐ Add some favorites to enable real-time notifications!
+                </div>
+              )}
+
+              {(favorites.matches.length > 0 || favorites.clubs.length > 0) && (
+                <div className="bg-blue-900/30 p-3 rounded">
+                  <div className="text-sm">
+                    <div className="font-medium text-blue-400 mb-2">Monitoring Status:</div>
+                    <div className="space-y-1 text-gray-300">
+                      {favorites.matches.length > 0 && (
+                        <div>
+                          📊 Tracking {favorites.matches.length} favorite match
+                          {favorites.matches.length > 1 ? 'es' : ''}
+                        </div>
+                      )}
+                      {favorites.clubs.length > 0 && (
+                        <div>
+                          ⚽ Tracking {favorites.clubs.length} favorite club
+                          {favorites.clubs.length > 1 ? 's' : ''}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Manual Controls (for debugging/testing) */}
+              <div className="flex gap-2">
+                <button
+                  onClick={startMonitoring}
+                  disabled={isMonitoring}
+                  className={`px-3 py-1 rounded text-sm ${
+                    isMonitoring
+                      ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                      : 'bg-green-600 hover:bg-green-700 text-white'
+                  }`}
+                >
+                  Start Monitoring
+                </button>
+                <button
+                  onClick={stopMonitoring}
+                  disabled={!isMonitoring}
+                  className={`px-3 py-1 rounded text-sm ${
+                    !isMonitoring
+                      ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                      : 'bg-red-600 hover:bg-red-700 text-white'
+                  }`}
+                >
+                  Stop Monitoring
+                </button>
+              </div>
+            </div>
           </div>
 
           {/* Favorites Section */}
