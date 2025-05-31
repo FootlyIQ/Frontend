@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { auth, db } from '../../firebaseConfig';
+import { collection, doc, getDoc, setDoc, onSnapshot, increment } from 'firebase/firestore';
+import { useAuthState } from 'react-firebase-hooks/auth';
 
 export default function MatchDetail() {
   const { matchId } = useParams();
@@ -11,6 +14,12 @@ export default function MatchDetail() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(null);
   const navigate = useNavigate();
+
+  // Voting state
+  const [user] = useAuthState(auth);
+  const [userVote, setUserVote] = useState(null);
+  const [voteCount, setVoteCount] = useState({ home: 0, draw: 0, away: 0 });
+  const [isVoting, setIsVoting] = useState(false);
 
   useEffect(() => {
     const fetchMatchDetails = async () => {
@@ -57,6 +66,299 @@ export default function MatchDetail() {
     // Clean up interval on unmount
     return () => clearInterval(interval);
   }, [matchId, matchData?.generalInfo?.status]); // Add status to dependencies to update interval
+
+  // Check if match is eligible for voting
+  const isMatchEligibleForVoting = () => {
+    if (!matchData) return false;
+    const status = matchData.generalInfo?.status;
+    // Allow voting only for scheduled matches (not started, in progress, or finished)
+    return status === 'SCHEDULED' || status === 'TIMED';
+  };
+
+  // Check if we should show poll results
+  const shouldShowPollResults = () => {
+    if (!matchData) return false;
+    const status = matchData.generalInfo?.status;
+    // Show results when match is live, paused, or finished
+    return status === 'IN_PLAY' || status === 'PAUSED' || status === 'FINISHED';
+  };
+
+  // Handle voting
+  const handleVote = async (voteType) => {
+    if (!user) {
+      alert('Please login to vote');
+      return;
+    }
+
+    if (!isMatchEligibleForVoting()) {
+      alert('Voting is only available before the match starts');
+      return;
+    }
+
+    // Prevent changing votes
+    if (userVote) {
+      alert('You have already voted! You cannot change your vote.');
+      return;
+    }
+
+    setIsVoting(true);
+    try {
+      const userVoteRef = doc(db, 'match_votes', `${matchId}_${user.uid}`);
+      const matchVoteRef = doc(db, 'match_vote_counts', matchId);
+
+      // Check if user has already voted (extra safety check)
+      const existingVote = await getDoc(userVoteRef);
+
+      if (existingVote.exists()) {
+        alert('You have already voted!');
+        setIsVoting(false);
+        return;
+      }
+
+      // First time voting - increment the vote count
+      await setDoc(
+        matchVoteRef,
+        {
+          [voteType]: increment(1),
+        },
+        { merge: true }
+      );
+
+      // Save user's vote
+      await setDoc(userVoteRef, {
+        vote: voteType,
+        matchId: matchId,
+        userId: user.uid,
+        timestamp: new Date(),
+      });
+
+      setUserVote(voteType);
+    } catch (error) {
+      console.error('Error voting:', error);
+      alert('Failed to submit vote. Please try again.');
+    } finally {
+      setIsVoting(false);
+    }
+  };
+
+  // Listen to vote counts and user's vote
+  useEffect(() => {
+    if (!matchId) return;
+
+    // Listen to vote counts
+    const matchVoteRef = doc(db, 'match_vote_counts', matchId);
+    const unsubscribeVotes = onSnapshot(matchVoteRef, (doc) => {
+      if (doc.exists()) {
+        const data = doc.data();
+        setVoteCount({
+          home: data.home || 0,
+          draw: data.draw || 0,
+          away: data.away || 0,
+        });
+      } else {
+        setVoteCount({ home: 0, draw: 0, away: 0 });
+      }
+    });
+
+    // Listen to user's vote if authenticated
+    let unsubscribeUserVote = null;
+    if (user) {
+      const userVoteRef = doc(db, 'match_votes', `${matchId}_${user.uid}`);
+      unsubscribeUserVote = onSnapshot(userVoteRef, (doc) => {
+        if (doc.exists()) {
+          setUserVote(doc.data().vote);
+        } else {
+          setUserVote(null);
+        }
+      });
+    }
+
+    return () => {
+      unsubscribeVotes();
+      if (unsubscribeUserVote) unsubscribeUserVote();
+    };
+  }, [matchId, user]);
+
+  // Voting Poll Component
+  const VotingPoll = () => {
+    const totalVotes = voteCount.home + voteCount.draw + voteCount.away;
+    const getPercentage = (votes) => (totalVotes > 0 ? ((votes / totalVotes) * 100).toFixed(1) : 0);
+
+    // Don't show anything if no votes and match hasn't started
+    if (totalVotes === 0 && !isMatchEligibleForVoting() && !shouldShowPollResults()) {
+      return null;
+    }
+
+    const isVotingActive = isMatchEligibleForVoting();
+    const showResults = shouldShowPollResults();
+
+    return (
+      <div
+        className={`p-6 rounded-lg border ${
+          showResults
+            ? 'bg-gradient-to-r from-gray-50 to-gray-100 border-gray-300'
+            : 'bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200'
+        }`}
+      >
+        <h3 className="text-lg font-semibold mb-4 text-center">
+          {showResults ? '📊 Match Prediction Results' : '🗳️ Match Prediction Poll'}
+        </h3>
+        <p className="text-sm text-gray-600 text-center mb-6">
+          {showResults
+            ? `Here's what our community predicted before the match started!`
+            : 'Who do you think will win? Vote before the match starts!'}
+        </p>
+
+        <div className="grid grid-cols-3 gap-4 mb-6">
+          {/* Home Team Vote */}
+          <button
+            onClick={() => handleVote('home')}
+            disabled={isVoting || !user || !isVotingActive || userVote}
+            className={`p-4 rounded-lg border-2 transition-all ${
+              userVote === 'home'
+                ? 'border-blue-500 bg-blue-100 text-blue-700'
+                : showResults
+                ? 'border-gray-300 bg-gray-50 cursor-default'
+                : userVote
+                ? 'border-gray-200 bg-gray-100 opacity-60 cursor-not-allowed'
+                : 'border-gray-200 bg-white hover:border-blue-300 hover:bg-blue-50'
+            } ${!user || !isVotingActive || userVote ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+          >
+            <div className="text-center">
+              <div className="text-2xl font-bold">1</div>
+              <div className="text-sm mt-1">{matchData.homeTeam.name}</div>
+              <div className="text-xs text-gray-500 mt-2">
+                {voteCount.home} votes ({getPercentage(voteCount.home)}%)
+              </div>
+              {/* Progress bar for results */}
+              {showResults && totalVotes > 0 && (
+                <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                  <div
+                    className="bg-blue-500 h-2 rounded-full transition-all duration-500"
+                    style={{ width: `${getPercentage(voteCount.home)}%` }}
+                  ></div>
+                </div>
+              )}
+            </div>
+          </button>
+
+          {/* Draw Vote */}
+          <button
+            onClick={() => handleVote('draw')}
+            disabled={isVoting || !user || !isVotingActive || userVote}
+            className={`p-4 rounded-lg border-2 transition-all ${
+              userVote === 'draw'
+                ? 'border-green-500 bg-green-100 text-green-700'
+                : showResults
+                ? 'border-gray-300 bg-gray-50 cursor-default'
+                : userVote
+                ? 'border-gray-200 bg-gray-100 opacity-60 cursor-not-allowed'
+                : 'border-gray-200 bg-white hover:border-green-300 hover:bg-green-50'
+            } ${!user || !isVotingActive || userVote ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+          >
+            <div className="text-center">
+              <div className="text-2xl font-bold">X</div>
+              <div className="text-sm mt-1">Draw</div>
+              <div className="text-xs text-gray-500 mt-2">
+                {voteCount.draw} votes ({getPercentage(voteCount.draw)}%)
+              </div>
+              {/* Progress bar for results */}
+              {showResults && totalVotes > 0 && (
+                <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                  <div
+                    className="bg-green-500 h-2 rounded-full transition-all duration-500"
+                    style={{ width: `${getPercentage(voteCount.draw)}%` }}
+                  ></div>
+                </div>
+              )}
+            </div>
+          </button>
+
+          {/* Away Team Vote */}
+          <button
+            onClick={() => handleVote('away')}
+            disabled={isVoting || !user || !isVotingActive || userVote}
+            className={`p-4 rounded-lg border-2 transition-all ${
+              userVote === 'away'
+                ? 'border-purple-500 bg-purple-100 text-purple-700'
+                : showResults
+                ? 'border-gray-300 bg-gray-50 cursor-default'
+                : userVote
+                ? 'border-gray-200 bg-gray-100 opacity-60 cursor-not-allowed'
+                : 'border-gray-200 bg-white hover:border-purple-300 hover:bg-purple-50'
+            } ${!user || !isVotingActive || userVote ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+          >
+            <div className="text-center">
+              <div className="text-2xl font-bold">2</div>
+              <div className="text-sm mt-1">{matchData.awayTeam.name}</div>
+              <div className="text-xs text-gray-500 mt-2">
+                {voteCount.away} votes ({getPercentage(voteCount.away)}%)
+              </div>
+              {/* Progress bar for results */}
+              {showResults && totalVotes > 0 && (
+                <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                  <div
+                    className="bg-purple-500 h-2 rounded-full transition-all duration-500"
+                    style={{ width: `${getPercentage(voteCount.away)}%` }}
+                  ></div>
+                </div>
+              )}
+            </div>
+          </button>
+        </div>
+
+        {/* Vote Status */}
+        <div className="text-center">
+          {showResults ? (
+            <div>
+              {user && userVote && (
+                <p className="text-sm text-blue-600 font-medium mb-2">
+                  🎯 You predicted:{' '}
+                  {userVote === 'home'
+                    ? matchData.homeTeam.name
+                    : userVote === 'draw'
+                    ? 'Draw'
+                    : matchData.awayTeam.name}
+                </p>
+              )}
+              {totalVotes > 0 && (
+                <div className="text-sm text-gray-600">
+                  <p className="font-medium">Community predicted:</p>
+                  <p className="text-xs mt-1">
+                    Most popular:{' '}
+                    {voteCount.home > voteCount.draw && voteCount.home > voteCount.away
+                      ? `${matchData.homeTeam.name} (${getPercentage(voteCount.home)}%)`
+                      : voteCount.draw > voteCount.home && voteCount.draw > voteCount.away
+                      ? `Draw (${getPercentage(voteCount.draw)}%)`
+                      : `${matchData.awayTeam.name} (${getPercentage(voteCount.away)}%)`}
+                  </p>
+                </div>
+              )}
+            </div>
+          ) : !user ? (
+            <p className="text-sm text-gray-500">Please login to vote</p>
+          ) : userVote ? (
+            <p className="text-sm text-green-600 font-medium">
+              ✅ You voted for:{' '}
+              {userVote === 'home'
+                ? matchData.homeTeam.name
+                : userVote === 'draw'
+                ? 'Draw'
+                : matchData.awayTeam.name}
+              <br />
+              <span className="text-xs text-gray-500">Vote is final - you cannot change it</span>
+            </p>
+          ) : (
+            <p className="text-sm text-blue-600">Click on your prediction to vote!</p>
+          )}
+
+          {totalVotes > 0 && (
+            <p className="text-xs text-gray-500 mt-2">Total votes: {totalVotes}</p>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   if (error) return <p className="text-red-500">{error}</p>;
   if (!matchData) return <p>Loading statistics...</p>;
@@ -608,6 +910,7 @@ export default function MatchDetail() {
                 </div>
               </div>
             </div>
+            <VotingPoll />
           </div>
         )}
 
