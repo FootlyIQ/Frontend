@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
+import { useFavorites } from '../../hooks/useFavorites';
 
 export default function MatchFeed() {
   const [matchesData, setMatchesData] = useState([]);
@@ -8,6 +9,7 @@ export default function MatchFeed() {
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { isMatchFavorited, toggleMatchFavorite, loading: favoritesLoading } = useFavorites();
 
   // Get initial values from URL params or use defaults
   const [selectedDate, setSelectedDate] = useState(
@@ -173,6 +175,26 @@ export default function MatchFeed() {
     );
   };
 
+  // Handle favorite toggle for matches
+  const handleMatchFavorite = async (e, match, leagueInfo) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const matchData = {
+      id: match.match_id,
+      homeTeam: match.home_team,
+      awayTeam: match.away_team,
+      homeCrest: match.home_crest,
+      awayCrest: match.away_crest,
+      date: match.date,
+      status: match.status,
+      score: match.score,
+      competition: leagueInfo ? leagueInfo.league : 'Competition TBD',
+    };
+
+    await toggleMatchFavorite(matchData);
+  };
+
   return (
     <section className="max-w-7xl mx-auto">
       {/* Filters Card */}
@@ -303,9 +325,39 @@ export default function MatchFeed() {
                         <div
                           key={matchIdx}
                           onClick={() => navigate(`/match/${match.match_id}`)}
-                          className="group bg-gray-50 hover:bg-gray-100 rounded-lg p-4 cursor-pointer transition-all duration-200"
+                          className="group bg-gray-50 hover:bg-gray-100 rounded-lg p-4 cursor-pointer transition-all duration-200 relative"
                         >
-                          <div className="grid grid-cols-7 items-center gap-4">
+                          {/* Favorite Star */}
+                          <button
+                            onClick={(e) => handleMatchFavorite(e, match, leagueData)}
+                            disabled={favoritesLoading}
+                            className="absolute top-2 right-2 p-1 rounded-full hover:bg-gray-200 transition-colors z-10"
+                            title={
+                              isMatchFavorited(match.match_id)
+                                ? 'Remove from favorites'
+                                : 'Add to favorites'
+                            }
+                          >
+                            <svg
+                              className={`w-5 h-5 ${
+                                isMatchFavorited(match.match_id)
+                                  ? 'text-yellow-500 fill-current'
+                                  : 'text-gray-400 hover:text-yellow-500'
+                              }`}
+                              fill={isMatchFavorited(match.match_id) ? 'currentColor' : 'none'}
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
+                              />
+                            </svg>
+                          </button>
+
+                          <div className="grid grid-cols-7 items-center gap-4 pr-8">
                             {/* Home Team */}
                             <div className="col-span-3 flex items-center justify-end gap-3">
                               <span className="font-medium text-right">{match.home_team}</span>
