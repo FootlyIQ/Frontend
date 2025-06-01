@@ -88,6 +88,28 @@ export const useFavorites = () => {
     }, 3000);
   };
 
+  // Track user activity for trending features
+  const trackActivity = (type, data) => {
+    try {
+      const activity = {
+        type, // 'favorite_club', 'favorite_match', 'team_view', etc.
+        ...data,
+        timestamp: Date.now(),
+      };
+
+      const recentActivity = JSON.parse(localStorage.getItem('recent_activity') || '[]');
+      recentActivity.push(activity);
+
+      // Keep only last 100 activities and last 24 hours
+      const last24h = Date.now() - 24 * 60 * 60 * 1000;
+      const filteredActivity = recentActivity.filter((act) => act.timestamp > last24h).slice(-100);
+
+      localStorage.setItem('recent_activity', JSON.stringify(filteredActivity));
+    } catch (error) {
+      console.error('Error tracking activity:', error);
+    }
+  };
+
   // Add match to favorites
   const addMatchToFavorites = async (matchData) => {
     if (!user) {
@@ -191,6 +213,13 @@ export const useFavorites = () => {
         });
 
         await setDoc(userFavoritesRef, currentFavorites);
+
+        // Track activity
+        trackActivity('favorite_club', {
+          teamName: clubData.name,
+          teamId: clubData.id,
+        });
+
         showNotification(`⭐ ${clubData.name} added to favorites!`, 'success');
       }
     } catch (error) {
@@ -257,5 +286,6 @@ export const useFavorites = () => {
     removeMatchFromFavorites,
     addClubToFavorites,
     removeClubFromFavorites,
+    trackActivity,
   };
 };
