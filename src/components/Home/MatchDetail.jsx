@@ -47,7 +47,7 @@ export default function MatchDetail() {
 
       // Refresh more frequently for live matches
       if (status === 'IN_PLAY' || status === 'PAUSED') {
-        return 15000; // 15 seconds for live matches
+        return 30000; // 30 seconds for live matches (optimized from 15s)
       }
       // Much less frequent for finished matches (once per day)
       if (status === 'FINISHED') {
@@ -365,17 +365,6 @@ export default function MatchDetail() {
 
   const { generalInfo, homeTeam, awayTeam, extraInfo, statistics } = matchData;
 
-  // Debug log to see match status and statistics
-  console.log('Match Debug Info:', {
-    status: generalInfo.status,
-    homeGoals: statistics?.homeTeam?.goals,
-    awayGoals: statistics?.awayTeam?.goals,
-    homeTeam: homeTeam.name,
-    awayTeam: awayTeam.name,
-    hasStatistics: !!statistics,
-    statisticsKeys: statistics ? Object.keys(statistics) : 'No statistics',
-  });
-
   // Helper function to get player events (goals, assists, cards, substitutions)
   const getPlayerEvents = (playerId, playerName) => {
     const events = [];
@@ -586,7 +575,13 @@ export default function MatchDetail() {
                           : 'text-gray-500'
                       }`}
                     >
-                      {generalInfo.status === 'PAUSED' ? 'HALF TIME' : generalInfo.status}
+                      {generalInfo.status === 'PAUSED'
+                        ? 'HALF TIME'
+                        : generalInfo.status === 'IN_PLAY'
+                        ? 'LIVE'
+                        : generalInfo.status === 'FINISHED'
+                        ? 'Finished'
+                        : 'Upcoming'}
                     </div>
                   </div>
                 )}
@@ -1564,7 +1559,13 @@ export default function MatchDetail() {
                             : 'bg-gray-100 text-gray-800'
                         }`}
                       >
-                        {generalInfo.status === 'SCHEDULED' ? 'Upcoming' : generalInfo.status}
+                        {generalInfo.status === 'SCHEDULED'
+                          ? 'Upcoming'
+                          : generalInfo.status === 'IN_PLAY'
+                          ? 'LIVE'
+                          : generalInfo.status === 'FINISHED'
+                          ? 'Finished'
+                          : generalInfo.status}
                       </span>
                     </p>
                   </div>

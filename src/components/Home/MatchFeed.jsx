@@ -38,6 +38,60 @@ export default function MatchFeed() {
     fetchMatches();
   }, [selectedDate]);
 
+  // Separate useEffect for auto-refresh to avoid infinite loops
+  useEffect(() => {
+    if (!matchesData.length) return; // Don't set up refresh until we have initial data
+
+    // Determine if we have any live matches for smart refresh
+    const hasLiveMatches = () => {
+      return matchesData.some((country) =>
+        country.leagues.some((league) =>
+          league.matches.some((match) => match.status === 'IN_PLAY' || match.status === 'PAUSED')
+        )
+      );
+    };
+
+    // Check if selected date is today
+    const isToday = selectedDate === new Date().toISOString().split('T')[0];
+
+    // Set refresh interval based on match status
+    const getRefreshInterval = () => {
+      if (hasLiveMatches()) {
+        return 30000; // 30 seconds when there are live matches
+      }
+      if (isToday) {
+        return 2 * 60 * 1000; // 2 minutes for today's matches (in case matches start)
+      }
+      return 5 * 60 * 1000; // 5 minutes for other dates
+    };
+
+    // Only set up auto-refresh if we need it
+    const needsRefresh = hasLiveMatches() || isToday;
+
+    if (!needsRefresh) {
+      return; // No refresh needed for old dates without live matches
+    }
+
+    const fetchUpdates = async () => {
+      try {
+        const response = await axios.get(
+          `http://127.0.0.1:5000/matches${selectedDate ? `?date=${selectedDate}` : ''}`
+        );
+
+        setMatchesData(response.data);
+        setError('');
+      } catch (err) {
+        console.error('Error updating matches:', err);
+      }
+    };
+
+    // Set up the interval
+    const interval = setInterval(fetchUpdates, getRefreshInterval());
+
+    // Clean up interval on unmount or when dependencies change
+    return () => clearInterval(interval);
+  }, [matchesData, selectedDate]);
+
   // Update URL params whenever filters change
   useEffect(() => {
     const params = new URLSearchParams();

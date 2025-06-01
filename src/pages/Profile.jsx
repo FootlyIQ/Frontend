@@ -12,6 +12,7 @@ import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { useFavorites } from '../hooks/useFavorites';
 import { useNavigate } from 'react-router-dom';
 import { useMatchNotifications } from '../hooks/useMatchNotifications';
+import { useLiveMatchStatus } from '../hooks/useLiveMatchStatus';
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -22,6 +23,7 @@ export default function Profile() {
   const [teamId, setTeamId] = useState('');
   const { favorites, removeMatchFromFavorites, removeClubFromFavorites } = useFavorites();
   const { isMonitoring, startMonitoring, stopMonitoring } = useMatchNotifications();
+  const { getDisplayStatus, isLoading: statusLoading } = useLiveMatchStatus(favorites.matches);
 
   // Preveri stanje prijave ob nalaganju strani
   useEffect(() => {
@@ -362,67 +364,113 @@ export default function Profile() {
             {/* Favorite Matches */}
             {favorites.matches.length > 0 && (
               <div className="mb-6">
-                <h4 className="text-lg font-medium mb-3 text-green-400">Favorite Matches</h4>
+                <h4 className="text-lg font-medium mb-3 text-green-400">
+                  Favorite Matches{' '}
+                  {statusLoading && <span className="text-xs text-gray-400">(updating...)</span>}
+                </h4>
                 <div className="space-y-3">
-                  {favorites.matches.map((match, idx) => (
-                    <div key={idx} className="bg-gray-700 p-4 rounded-lg">
-                      <div className="flex items-center justify-between">
-                        <div
-                          className="flex items-center gap-4 cursor-pointer hover:text-blue-400 flex-1"
-                          onClick={() => navigate(`/match/${match.id}`)}
-                        >
-                          {/* Teams Section - Fixed width to prevent layout shift */}
-                          <div className="flex items-center gap-3 min-w-0 flex-1">
-                            <div className="flex items-center gap-2 min-w-0">
-                              <img
-                                src={match.homeCrest}
-                                alt={match.homeTeam}
-                                className="w-6 h-6 object-contain flex-shrink-0"
-                              />
-                              <span className="font-medium truncate">{match.homeTeam}</span>
+                  {favorites.matches.map((match, idx) => {
+                    const displayStatus = getDisplayStatus(match);
+                    return (
+                      <div key={idx} className="bg-gray-700 p-4 rounded-lg">
+                        <div className="flex items-center justify-between">
+                          <div
+                            className="flex items-center gap-4 cursor-pointer hover:text-blue-400 flex-1"
+                            onClick={() => navigate(`/match/${match.id}`)}
+                          >
+                            {/* Teams Section - Fixed width to prevent layout shift */}
+                            <div className="flex items-center gap-3 min-w-0 flex-1">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <img
+                                  src={match.homeCrest}
+                                  alt={match.homeTeam}
+                                  className="w-6 h-6 object-contain flex-shrink-0"
+                                />
+                                <span className="font-medium truncate">{match.homeTeam}</span>
+                              </div>
+
+                              <span className="text-gray-400 flex-shrink-0">vs</span>
+
+                              <div className="flex items-center gap-2 min-w-0">
+                                <img
+                                  src={match.awayCrest}
+                                  alt={match.awayTeam}
+                                  className="w-6 h-6 object-contain flex-shrink-0"
+                                />
+                                <span className="font-medium truncate">{match.awayTeam}</span>
+                              </div>
                             </div>
 
-                            <span className="text-gray-400 flex-shrink-0">vs</span>
+                            {/* Match Info Section - Fixed width */}
+                            <div className="text-sm text-gray-400 text-right min-w-[140px] flex-shrink-0">
+                              <div className="font-medium">{match.date}</div>
+                              <div className="text-xs">
+                                {match.competition && match.competition !== 'Unknown Competition'
+                                  ? match.competition
+                                  : 'Competition TBD'}
+                              </div>
 
-                            <div className="flex items-center gap-2 min-w-0">
-                              <img
-                                src={match.awayCrest}
-                                alt={match.awayTeam}
-                                className="w-6 h-6 object-contain flex-shrink-0"
-                              />
-                              <span className="font-medium truncate">{match.awayTeam}</span>
+                              {/* Live Status and Score */}
+                              <div className="flex items-center justify-end gap-2 mt-1">
+                                {displayStatus.isLive && (
+                                  <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                                )}
+
+                                {/* Only show score for matches that have started or finished */}
+                                {displayStatus.score &&
+                                  displayStatus.status !== 'SCHEDULED' &&
+                                  displayStatus.status !== 'TIMED' &&
+                                  !(
+                                    displayStatus.score === '0-0' &&
+                                    (displayStatus.status === 'SCHEDULED' ||
+                                      displayStatus.status === 'TIMED')
+                                  ) && (
+                                    <div className="text-sm font-bold text-green-400">
+                                      {displayStatus.score}
+                                    </div>
+                                  )}
+
+                                <div
+                                  className={`text-xs ${
+                                    displayStatus.status === 'IN_PLAY'
+                                      ? 'text-red-400 font-medium'
+                                      : displayStatus.status === 'FINISHED'
+                                      ? 'text-gray-500'
+                                      : displayStatus.status === 'SCHEDULED' ||
+                                        displayStatus.status === 'TIMED'
+                                      ? 'text-blue-400'
+                                      : 'text-yellow-400'
+                                  }`}
+                                >
+                                  {displayStatus.status === 'IN_PLAY'
+                                    ? 'LIVE'
+                                    : displayStatus.status === 'FINISHED'
+                                    ? 'FINISHED'
+                                    : displayStatus.status === 'SCHEDULED' ||
+                                      displayStatus.status === 'TIMED'
+                                    ? 'SCHEDULED'
+                                    : displayStatus.status}
+                                </div>
+                              </div>
                             </div>
                           </div>
-
-                          {/* Match Info Section - Fixed width */}
-                          <div className="text-sm text-gray-400 text-right min-w-[120px] flex-shrink-0">
-                            <div className="font-medium">{match.date}</div>
-                            <div className="text-xs">
-                              {match.competition && match.competition !== 'Unknown Competition'
-                                ? match.competition
-                                : 'Competition TBD'}
-                            </div>
-                            {match.status && (
-                              <div className="text-xs text-blue-400">{match.status}</div>
-                            )}
-                          </div>
+                          <button
+                            onClick={() => removeMatchFromFavorites(match.id)}
+                            className="text-red-400 hover:text-red-300 p-1 ml-4 flex-shrink-0"
+                            title="Remove from favorites"
+                          >
+                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                              <path
+                                fillRule="evenodd"
+                                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                          </button>
                         </div>
-                        <button
-                          onClick={() => removeMatchFromFavorites(match.id)}
-                          className="text-red-400 hover:text-red-300 p-1 ml-4 flex-shrink-0"
-                          title="Remove from favorites"
-                        >
-                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path
-                              fillRule="evenodd"
-                              d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                        </button>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
