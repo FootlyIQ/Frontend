@@ -22,6 +22,7 @@ export default function PlayerDetailCard({ player, stats, onClose }) {
         {stats.fixture}
       </p>
 
+
       {/* Stats table */}
       <div className="overflow-x-auto">
         <table className="w-full text-sm text-left border border-gray-300 dark:border-gray-700 rounded-lg">
