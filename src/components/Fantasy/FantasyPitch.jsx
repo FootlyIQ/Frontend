@@ -35,10 +35,33 @@ export default function FantasyPitch() {
   const [liveRank, setLiveRank] = useState(null);
   const [prevRank, setPrevRank] = useState(null);
   const [rankDelta, setRankDelta] = useState(null);
+  const [fixtureDifficulty, setFixtureDifficulty] = useState(null);
+  const [showFdrSection, setShowFdrSection] = useState(false);
   const onClosePlayerCard = () => setSelectedPlayer(null);
   const navigate = useNavigate();
   const captaincyBoxRef = useRef(null);
   const transferBoxRef = useRef(null);
+
+  const maxGw = 38; // Maximum gameweek for the current season
+  const remainingGws = Math.max(0, maxGw - selectedGameweek);
+  const fdrGws = Math.min(remainingGws, 5); // Fixture Difficulty Rating for the next 5 gameweeks
+
+  const showFdrButton = selectedGameweek < maxGw && fdrGws > 0;
+
+  useEffect(() => {
+    if (!showFdrSection) return;
+    const fetchFixtureDifficulty = async () => {
+      try {
+        const res = await axios.get(
+          `http://127.0.0.1:5000/api/fpl/fixture-difficulty?gameweek=${selectedGameweek}&count=${fdrGws}`
+        );
+        setFixtureDifficulty(res.data);
+      } catch (err) {
+        setFixtureDifficulty(null);
+      }
+    };
+    fetchFixtureDifficulty();
+  }, [selectedGameweek, showFdrSection, fdrGws]);
 
   useEffect(() => {
     const fetchCurrentGameweek = async () => {
@@ -91,6 +114,18 @@ export default function FantasyPitch() {
     };
     fetchLiveRank();
   }, [teamId, selectedGameweek]);
+
+  useEffect(() => {
+    const fetchFixtureDifficulty = async () => {
+      try {
+        const res = await axios.get(`http://127.0.0.1:5000/api/fpl/fixture-difficulty?gameweek=${selectedGameweek}`);
+        setFixtureDifficulty(res.data);
+      } catch (err) {
+        setFixtureDifficulty(null);
+      }
+    };
+    fetchFixtureDifficulty();
+  }, [selectedGameweek]);
 
   const fetchTeamIdFromFirestore = async (uid) => {
     try {
@@ -147,6 +182,7 @@ export default function FantasyPitch() {
     setShowTransferBox(false);
     setCaptaincySuggestions(null);
     setTransferSuggestions(null);
+    setShowFdrSection(false);
   }
 
   // Handler for captaincy suggestions
@@ -242,6 +278,7 @@ export default function FantasyPitch() {
               </div>
             )}
 
+
             {/* Shirt */}
             <div className="kit-container">
               <img src={shirtUrl} alt="shirt" className="shirt-image" />
@@ -304,34 +341,38 @@ export default function FantasyPitch() {
             {/* Suggestion Buttons */}
             {selectedGameweek < currentGameweek && (
               <div className="flex flex-col gap-2">
-                <button
-                  onClick={handleGetCaptaincy}
-                  className="bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white font-bold px-6 py-2 rounded-lg shadow transition"
-                  disabled={captaincyLoading}
-                >
-                  {captaincyLoading ? (
-                    <span className="flex items-center gap-2">
-                      <svg className="animate-spin" width="18" height="18" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="#fff" strokeWidth="4" opacity="0.2" /><path d="M12 2a10 10 0 0 1 10 10" stroke="#fff" strokeWidth="4" strokeLinecap="round" /></svg>
-                      Loading...
-                    </span>
-                  ) : (
-                    <>Get Captaincy Suggestions</>
-                  )}
-                </button>
-                <button
-                  onClick={handleGetTransfers}
-                  className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold px-6 py-2 rounded-lg shadow transition"
-                  disabled={transfersLoading}
-                >
-                  {transfersLoading ? (
-                    <span className="flex items-center gap-2">
-                      <svg className="animate-spin" width="18" height="18" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="#fff" strokeWidth="4" opacity="0.2" /><path d="M12 2a10 10 0 0 1 10 10" stroke="#fff" strokeWidth="4" strokeLinecap="round" /></svg>
-                      Loading...
-                    </span>
-                  ) : (
-                    <>Get Transfer Suggestions</>
-                  )}
-                </button>
+                {!showCaptaincyBox && (
+                  <button
+                    onClick={handleGetCaptaincy}
+                    className="bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white font-bold px-6 py-2 rounded-lg shadow transition"
+                    disabled={captaincyLoading}
+                  >
+                    {captaincyLoading ? (
+                      <span className="flex items-center gap-2">
+                        <svg className="animate-spin" width="18" height="18" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="#fff" strokeWidth="4" opacity="0.2" /><path d="M12 2a10 10 0 0 1 10 10" stroke="#fff" strokeWidth="4" strokeLinecap="round" /></svg>
+                        Loading...
+                      </span>
+                    ) : (
+                      <>Get Captaincy Suggestions</>
+                    )}
+                  </button>
+                )}
+                {!showTransferBox && (
+                  <button
+                    onClick={handleGetTransfers}
+                    className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold px-6 py-2 rounded-lg shadow transition"
+                    disabled={transfersLoading}
+                  >
+                    {transfersLoading ? (
+                      <span className="flex items-center gap-2">
+                        <svg className="animate-spin" width="18" height="18" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="#fff" strokeWidth="4" opacity="0.2" /><path d="M12 2a10 10 0 0 1 10 10" stroke="#fff" strokeWidth="4" strokeLinecap="round" /></svg>
+                        Loading...
+                      </span>
+                    ) : (
+                      <>Get Transfer Suggestions</>
+                    )}
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -410,10 +451,18 @@ export default function FantasyPitch() {
                   ref={captaincyBoxRef}
                   className="flex-1 bg-white dark:bg-slate-800 rounded-lg shadow p-4 mb-4 w-full mx-auto"
                 >
-                  <h3 className="font-bold mb-4 text-xl text-emerald-700 flex items-center gap-2">
-                    <svg width="28" height="28" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#059669" /><text x="12" y="17" textAnchor="middle" fontSize="14" fill="#fff" fontWeight="bold">C</text></svg>
-                    Top 6 Captaincy Choices For GW {selectedGameweek + 1}
-                  </h3>
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="font-bold mb-4 text-xl text-emerald-700 flex items-center gap-2">
+                      <svg width="28" height="28" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#059669" /><text x="12" y="17" textAnchor="middle" fontSize="14" fill="#fff" fontWeight="bold">C</text></svg>
+                      Top 6 Captaincy Choices For GW {selectedGameweek + 1}
+                    </h3>
+                    <button
+                      onClick={() => setShowCaptaincyBox(false)}
+                      className="bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white font-bold px-4 py-1 rounded-lg shadow transition"
+                    >
+                      x
+                    </button>
+                  </div>
                   {captaincyLoading ? (
                     <div className="text-center text-lg font-semibold">Loading...</div>
                   ) : captaincySuggestions && Array.isArray(captaincySuggestions.suggested_captains) && captaincySuggestions.suggested_captains.length > 0 ? (
@@ -488,6 +537,8 @@ export default function FantasyPitch() {
                                 <span>
                                   {cap.next_fixture.opponent} ({cap.next_fixture.is_home ? "Home" : "Away"}, FDR: {cap.next_fixture.fdr})
                                 </span>
+                                {" | "}
+                                <span className="font-semibold">Predicted Points:</span> {cap.predicted_points}
                               </div>
                             </div>
                           </div>
@@ -506,13 +557,21 @@ export default function FantasyPitch() {
                   ref={transferBoxRef}
                   className="flex-1 bg-white dark:bg-slate-800 rounded-lg shadow p-4 mb-4 w-full mx-auto"
                 >
-                  <h3 className="font-bold mb-4 text-xl text-blue-700 flex items-center gap-2">
-                    <svg width="28" height="28" fill="none" viewBox="0 0 24 24">
-                      <circle cx="12" cy="12" r="10" fill="#2563eb" />
-                      <text x="12" y="17" textAnchor="middle" fontSize="14" fill="#fff" fontWeight="bold">T</text>
-                    </svg>
-                    Top 3 Transfer Suggestions For GW {selectedGameweek + 1}
-                  </h3>
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="font-bold mb-4 text-xl text-blue-700 flex items-center gap-2">
+                      <svg width="28" height="28" fill="none" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10" fill="#2563eb" />
+                        <text x="12" y="17" textAnchor="middle" fontSize="14" fill="#fff" fontWeight="bold">T</text>
+                      </svg>
+                      Top 3 Transfer Suggestions For GW {selectedGameweek + 1}
+                    </h3>
+                    <button
+                      onClick={() => setShowTransferBox(false)}
+                      className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold px-4 py-1 rounded-lg shadow transition"
+                    >
+                      x
+                    </button>
+                  </div>
                   {/* Show only budget */}
                   <div className="flex flex-wrap gap-6 mb-6 justify-center">
                     <div className="flex items-center gap-2 bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 px-4 py-2 rounded-lg shadow">
@@ -575,6 +634,7 @@ export default function FantasyPitch() {
                                 {/* Add empty lines for spacing to match IN card */}
                                 <div className="text-sm text-transparent select-none">Score: ----</div>
                                 <div className="text-xs mt-1 text-transparent select-none">Next: ----</div>
+                                <div className="text-xs mt-1 text-transparent select-none">Next: ----</div>
                               </div>
                             </div>
                             {/* Swap Icon */}
@@ -622,6 +682,8 @@ export default function FantasyPitch() {
                                   <span>
                                     {inn.next_fixture?.opponent} ({inn.next_fixture?.is_home ? "Home" : "Away"}, FDR: {inn.next_fixture?.fdr})
                                   </span>
+                                  {" | "}
+                                  <span className="font-semibold">Predicted Points:</span> {inn.predicted_points}
                                 </div>
                               </div>
                             </div>
@@ -632,6 +694,95 @@ export default function FantasyPitch() {
                   ) : (
                     <div className="text-center">No transfer suggestions</div>
                   )}
+                </div>
+              )}
+
+              {showFdrButton && !showFdrSection && (
+                <div className="flex justify-center mt-6">
+                  <button
+                    onClick={() => setShowFdrSection(true)}
+                    className="bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white font-bold px-6 py-2 rounded-lg shadow transition"
+                  >
+                    Show Fixture Difficulty (Next {fdrGws} GW{fdrGws > 1 ? "s" : ""})
+                  </button>
+                </div>
+              )}
+              {/* Fixture Difficulty Rating Section */}
+              {showFdrSection && fixtureDifficulty && (
+                <div className="flex flex-col gap-6 justify-center mt-8">
+                  <div className="flex-1 bg-gradient-to-br from-emerald-50 via-white to-red-50 dark:from-slate-800 dark:via-slate-900 dark:to-slate-800 rounded-2xl shadow-lg p-6 mb-4 w-full mx-auto border border-emerald-100 dark:border-slate-700">
+                    <div className="flex items-center justify-between mb-6">
+                      <h3 className="font-bold text-2xl text-emerald-700 flex items-center gap-3 m-0">
+                        <svg width="34" height="34" fill="none" viewBox="0 0 24 24">
+                          <circle cx="12" cy="12" r="10" fill="#059669" />
+                          <text x="12" y="17" textAnchor="middle" fontSize="11" fill="#fff" fontWeight="bold">FDR</text>
+                        </svg>
+                        Fixture Difficulty (Next {fdrGws} GW{fdrGws > 1 ? "s" : ""})
+                      </h3>
+                      <button
+                        onClick={() => setShowFdrSection(false)}
+                        className="bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white font-bold px-4 py-1 rounded-lg shadow transition"
+                      >
+                        ×
+                      </button>
+                    </div>
+                    <div className="flex flex-col md:flex-row gap-8">
+                      {/* Easiest */}
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <svg width="22" height="22" fill="none" viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="11" fill="#22c55e" />
+                            <path d="M8 13l3 3 5-5" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                          <h4 className="font-semibold text-green-700 text-lg">Easiest Schedules</h4>
+                        </div>
+                        <div className="flex flex-col gap-3">
+                          {fixtureDifficulty.easiest.map((t) => {
+                            const shirtNumber = teamIdToShirtNumber[t.team_id] || 1;
+                            const shirtUrl = `https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_${shirtNumber}-110.webp`;
+                            return (
+                              <div key={t.team_id} className="flex items-center gap-3 bg-white/80 dark:bg-slate-900 rounded-xl shadow p-3 border-l-4 border-emerald-400">
+                                <img src={shirtUrl} alt={t.team} className="w-10 h-10 object-contain" />
+                                <span className="font-semibold text-lg">{t.team}</span>
+                                <span className="ml-auto text-emerald-700 font-bold text-lg flex items-center gap-1">
+                                  <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><circle cx="9" cy="12" r="8" fill="#bbf7d0"/><text x="9" y="16" textAnchor="middle" fontSize="10" fill="#059669" fontWeight="bold">FDR</text></svg>
+                                  {t.total_fdr}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                      {/* Divider */}
+                      <div className="hidden md:block w-px bg-gradient-to-b from-emerald-200 via-gray-300 to-red-200 dark:from-slate-700 dark:via-slate-800 dark:to-slate-700 mx-2"></div>
+                      {/* Hardest */}
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <svg width="22" height="22" fill="none" viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="11" fill="#ef4444" />
+                            <path d="M16 11l-4 4-2-2" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                          <h4 className="font-semibold text-red-700 text-lg">Hardest Schedules</h4>
+                        </div>
+                        <div className="flex flex-col gap-3">
+                          {fixtureDifficulty.hardest.map((t) => {
+                            const shirtNumber = teamIdToShirtNumber[t.team_id] || 1;
+                            const shirtUrl = `https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_${shirtNumber}-110.webp`;
+                            return (
+                              <div key={t.team_id} className="flex items-center gap-3 bg-white/80 dark:bg-slate-900 rounded-xl shadow p-3 border-l-4 border-red-400">
+                                <img src={shirtUrl} alt={t.team} className="w-10 h-10 object-contain" />
+                                <span className="font-semibold text-lg">{t.team}</span>
+                                <span className="ml-auto text-red-600 font-bold text-lg flex items-center gap-1">
+                                  <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><circle cx="9" cy="12" r="8" fill="#fecaca"/><text x="9" y="16" textAnchor="middle" fontSize="10" fill="#dc2626" fontWeight="bold">FDR</text></svg>
+                                  {t.total_fdr}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
