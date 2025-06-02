@@ -24,6 +24,12 @@ export default function Profile() {
   const { favorites, removeMatchFromFavorites, removeClubFromFavorites } = useFavorites();
   const { isMonitoring, startMonitoring, stopMonitoring } = useMatchNotifications();
   const { getDisplayStatus, isLoading: statusLoading } = useLiveMatchStatus(favorites.matches);
+  const [banner, setBanner] = useState({ message: '', type: '' });
+
+  const showBanner = (message, type = 'info') => {
+    setBanner({ message, type });
+    setTimeout(() => setBanner({ message: '', type: '' }), 4000);
+  };
 
   // Preveri stanje prijave ob nalaganju strani
   useEffect(() => {
@@ -66,10 +72,9 @@ export default function Profile() {
 
       setUser(newUser);
       setIsLoggedIn(true);
-      alert('Registration successful!');
+      showBanner('Registration successful!', 'success');
     } catch (error) {
-      console.error('Error during registration:', error.message);
-      alert(error.message);
+      showBanner(error.message, 'error');
     }
   };
 
@@ -78,10 +83,9 @@ export default function Profile() {
       const userCredential = await signInWithEmailAndPassword(auth, form.email, form.password);
       setUser(userCredential.user);
       setIsLoggedIn(true);
-      alert('Login successful!');
+      showBanner('Login successful!', 'success');
     } catch (error) {
-      console.error('Error during login:', error.message);
-      alert(error.message);
+      showBanner(error.message, 'error');
     }
   };
 
@@ -105,10 +109,9 @@ export default function Profile() {
 
       setUser(newUser);
       setIsLoggedIn(true);
-      alert('Google login successful!');
+      showBanner('Google login successful!', 'success');
     } catch (error) {
-      console.error('Error during Google login:', error.message);
-      alert(error.message);
+      showBanner(error.message, 'error');
     }
   };
 
@@ -119,84 +122,127 @@ export default function Profile() {
       setUser(null);
       setForm({ email: '', password: '', name: '' });
       setTeamId('');
-      alert('Logged out successfully!');
+      showBanner('Logged out successfully!', 'info');
     } catch (error) {
-      console.error('Error during logout:', error.message);
-      alert(error.message);
+      showBanner(error.message, 'error');
     }
   };
 
   const saveTeamIdToFirestore = async () => {
     try {
       if (!user) {
-        alert('You must be logged in to save your Fantasy Team ID.');
+        showBanner('You must be logged in to save your Fantasy Team ID.', 'info');
         return;
       }
 
       await setDoc(doc(db, 'users', user.uid), { teamId }, { merge: true });
-      alert('Fantasy Team ID saved successfully!');
+      showBanner('Fantasy Team ID saved successfully!', 'success');
     } catch (error) {
       console.error('Error saving Fantasy Team ID:', error.message);
-      alert('Failed to save Fantasy Team ID.');
+      showBanner(`Error saving Fantasy Team ID: ${error.message}`, 'error');
     }
   };
 
   return (
     <div className="p-6 bg-gray-900 text-gray-100 min-h-screen flex items-center justify-center">
+      {banner.message && (
+        <div
+          className={`fixed top-4 left-1/2 transform -translate-x-1/2 z-50 px-6 py-3 rounded shadow-lg text-white font-semibold transition-all
+      ${banner.type === 'success' ? 'bg-emerald-600' : 'bg-red-600'}`}
+          style={{ minWidth: 250, maxWidth: 400, textAlign: 'center' }}
+        >
+          {banner.message}
+        </div>
+      )}
       {!isLoggedIn ? (
-        <div className="max-w-md w-full bg-gray-800 p-6 rounded shadow-lg">
-          <h2 className="text-2xl font-bold mb-4 text-center">
-            {isRegistering ? 'Register' : 'Login'}
+        <div className="max-w-md w-full bg-gray-800 p-8 rounded-2xl shadow-2xl border border-gray-700">
+          <h2 className="text-3xl font-extrabold mb-6 text-center text-emerald-400 tracking-tight">
+            {isRegistering ? 'Create Account' : 'Sign In'}
           </h2>
-          {isRegistering && (
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-1">Name</label>
-              <input
-                type="text"
-                name="name"
-                value={form.name}
-                onChange={handleInputChange}
-                className="w-full p-2 border rounded bg-gray-700 text-gray-100"
-              />
-            </div>
-          )}
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-1">Email</label>
-            <input
-              type="email"
-              name="email"
-              value={form.email}
-              onChange={handleInputChange}
-              className="w-full p-2 border rounded bg-gray-700 text-gray-100"
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-1">Password</label>
-            <input
-              type="password"
-              name="password"
-              value={form.password}
-              onChange={handleInputChange}
-              className="w-full p-2 border rounded bg-gray-700 text-gray-100"
-            />
-          </div>
-          <button
-            onClick={isRegistering ? handleRegister : handleLogin}
-            className="w-full bg-blue-500 hover:bg-blue-600 text-white p-2 rounded"
+          <form
+            onSubmit={e => {
+              e.preventDefault();
+              isRegistering ? handleRegister() : handleLogin();
+            }}
+            className="space-y-5"
           >
-            {isRegistering ? 'Register' : 'Login'}
-          </button>
+            {isRegistering && (
+              <div>
+                <label className="block text-sm font-medium mb-1 text-gray-300">Name</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-400">
+                    <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" fill="#34d399"/><path d="M4 20c0-2.5 3.6-4 8-4s8 1.5 8 4" stroke="#34d399" strokeWidth="2" strokeLinecap="round"/></svg>
+                  </span>
+                  <input
+                    type="text"
+                    name="name"
+                    value={form.name}
+                    onChange={handleInputChange}
+                    className="w-full p-3 pl-10 border border-gray-600 rounded-lg bg-gray-700 text-gray-100 focus:ring-2 focus:ring-emerald-400 outline-none transition"
+                    placeholder="Your Name"
+                    autoComplete="name"
+                  />
+                </div>
+              </div>
+            )}
+            <div>
+              <label className="block text-sm font-medium mb-1 text-gray-300">Email</label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-400">
+                  <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3" fill="#34d399"/><path d="M3 7l9 6 9-6" stroke="#059669" strokeWidth="2" strokeLinecap="round"/></svg>
+                </span>
+                <input
+                  type="email"
+                  name="email"
+                  value={form.email}
+                  onChange={handleInputChange}
+                  className="w-full p-3 pl-10 border border-gray-600 rounded-lg bg-gray-700 text-gray-100 focus:ring-2 focus:ring-emerald-400 outline-none transition"
+                  placeholder="you@email.com"
+                  autoComplete="email"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1 text-gray-300">Password</label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-400">
+                  <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="8" rx="3" fill="#34d399"/><circle cx="12" cy="14" r="2" fill="#059669"/></svg>
+                </span>
+                <input
+                  type="password"
+                  name="password"
+                  value={form.password}
+                  onChange={handleInputChange}
+                  className="w-full p-3 pl-10 border border-gray-600 rounded-lg bg-gray-700 text-gray-100 focus:ring-2 focus:ring-emerald-400 outline-none transition"
+                  placeholder="Password"
+                  autoComplete={isRegistering ? "new-password" : "current-password"}
+                />
+              </div>
+            </div>
+            <button
+              type="submit"
+              className="w-full bg-gradient-to-r from-emerald-500 to-emerald-700 hover:from-emerald-600 hover:to-emerald-800 text-white font-bold p-3 rounded-lg shadow transition text-lg"
+            >
+              {isRegistering ? 'Register' : 'Login'}
+            </button>
+          </form>
+          <div className="flex items-center my-6">
+            <div className="flex-grow border-t border-gray-600"></div>
+            <span className="mx-3 text-gray-400 text-sm">or</span>
+            <div className="flex-grow border-t border-gray-600"></div>
+          </div>
           <button
             onClick={handleGoogleLogin}
-            className="w-full bg-red-500 hover:bg-red-600 text-white p-2 rounded mt-4"
+            className="w-full flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 text-white font-bold p-3 rounded-lg shadow transition"
           >
-            Login with Google
+            <svg width="20" height="20" viewBox="0 0 48 48"><g><path fill="#fff" d="M44.5 20H24v8.5h11.7C34.7 33.4 29.8 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c2.7 0 5.2.9 7.2 2.4l6.4-6.4C34.2 5.1 29.4 3 24 3 12.4 3 3 12.4 3 24s9.4 21 21 21c10.5 0 19.5-7.6 21-17.5V24z"/><path fill="#4285F4" d="M6.3 14.7l7 5.1C15.7 16.1 19.5 13 24 13c2.7 0 5.2.9 7.2 2.4l6.4-6.4C34.2 5.1 29.4 3 24 3c-7.7 0-14.4 4.4-17.7 10.7z"/><path fill="#34A853" d="M24 45c5.6 0 10.7-1.9 14.7-5.1l-6.8-5.6C29.7 36.6 26.9 37.5 24 37.5c-5.7 0-10.6-3.7-12.3-8.8l-7 5.4C7.6 41.2 15.2 45 24 45z"/><path fill="#FBBC05" d="M44.5 20H24v8.5h11.7c-1.1 3-4.1 5-7.7 5-2.2 0-4.2-.7-5.7-2l-7 5.4C18.4 43.3 21 45 24 45c10.5 0 19.5-7.6 21-17.5V24z"/><path fill="#EA4335" d="M6.3 14.7l7 5.1C15.7 16.1 19.5 13 24 13c2.7 0 5.2.9 7.2 2.4l6.4-6.4C34.2 5.1 29.4 3 24 3c-7.7 0-14.4 4.4-17.7 10.7z"/></g></svg>
+            Continue with Google
           </button>
           <p
-            className="text-sm text-center mt-4 cursor-pointer text-blue-400 hover:text-blue-500"
+            className="text-sm text-center mt-6 cursor-pointer text-emerald-400 hover:text-emerald-300 transition"
             onClick={() => setIsRegistering(!isRegistering)}
           >
-            {isRegistering ? 'Already have an account? Login' : "Don't have an account? Register"}
+            {isRegistering ? 'Already have an account? Login' : "Don’t have an account? Register"}
           </p>
         </div>
       ) : (
@@ -298,22 +344,20 @@ export default function Profile() {
                 <button
                   onClick={startMonitoring}
                   disabled={isMonitoring}
-                  className={`px-3 py-1 rounded text-sm ${
-                    isMonitoring
+                  className={`px-3 py-1 rounded text-sm ${isMonitoring
                       ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
                       : 'bg-green-600 hover:bg-green-700 text-white'
-                  }`}
+                    }`}
                 >
                   Start Monitoring
                 </button>
                 <button
                   onClick={stopMonitoring}
                   disabled={!isMonitoring}
-                  className={`px-3 py-1 rounded text-sm ${
-                    !isMonitoring
+                  className={`px-3 py-1 rounded text-sm ${!isMonitoring
                       ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
                       : 'bg-red-600 hover:bg-red-700 text-white'
-                  }`}
+                    }`}
                 >
                   Stop Monitoring
                 </button>
@@ -431,25 +475,24 @@ export default function Profile() {
                                   )}
 
                                 <div
-                                  className={`text-xs ${
-                                    displayStatus.status === 'IN_PLAY'
+                                  className={`text-xs ${displayStatus.status === 'IN_PLAY'
                                       ? 'text-red-400 font-medium'
                                       : displayStatus.status === 'FINISHED'
-                                      ? 'text-gray-500'
-                                      : displayStatus.status === 'SCHEDULED' ||
-                                        displayStatus.status === 'TIMED'
-                                      ? 'text-blue-400'
-                                      : 'text-yellow-400'
-                                  }`}
+                                        ? 'text-gray-500'
+                                        : displayStatus.status === 'SCHEDULED' ||
+                                          displayStatus.status === 'TIMED'
+                                          ? 'text-blue-400'
+                                          : 'text-yellow-400'
+                                    }`}
                                 >
                                   {displayStatus.status === 'IN_PLAY'
                                     ? 'LIVE'
                                     : displayStatus.status === 'FINISHED'
-                                    ? 'FINISHED'
-                                    : displayStatus.status === 'SCHEDULED' ||
-                                      displayStatus.status === 'TIMED'
-                                    ? 'SCHEDULED'
-                                    : displayStatus.status}
+                                      ? 'FINISHED'
+                                      : displayStatus.status === 'SCHEDULED' ||
+                                        displayStatus.status === 'TIMED'
+                                        ? 'SCHEDULED'
+                                        : displayStatus.status}
                                 </div>
                               </div>
                             </div>
