@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import { db } from "../../firebaseConfig";
 import { doc, getDoc } from "firebase/firestore";
@@ -37,6 +37,7 @@ export default function FantasyPitch() {
   const [rankDelta, setRankDelta] = useState(null);
   const [fixtureDifficulty, setFixtureDifficulty] = useState(null);
   const [showFdrSection, setShowFdrSection] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(true);
   const onClosePlayerCard = () => setSelectedPlayer(null);
   const navigate = useNavigate();
   const captaincyBoxRef = useRef(null);
@@ -79,16 +80,17 @@ export default function FantasyPitch() {
   }, []);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        fetchTeamIdFromFirestore(user.uid);
-      } else {
-        navigate("/login"); // Preusmeri na stran za prijavo
-      }
-    });
+  const unsubscribe = onAuthStateChanged(auth, (user) => {
+    if (user) {
+      setIsLoggedIn(true);
+      fetchTeamIdFromFirestore(user.uid);
+    } else {
+      setIsLoggedIn(false);
+    }
+  });
 
-    return () => unsubscribe();
-  }, [navigate]);
+  return () => unsubscribe();
+}, []);
 
   // Fetch live rank for the selected gameweek
   useEffect(() => {
@@ -298,6 +300,30 @@ export default function FantasyPitch() {
       })}
     </div>
   );
+
+  if (!isLoggedIn) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-slate-900 dark:to-slate-800">
+        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-8 flex flex-col items-center border border-emerald-200 dark:border-slate-700">
+          <svg width="48" height="48" fill="none" viewBox="0 0 24 24" className="mb-4">
+            <circle cx="12" cy="12" r="10" fill="#059669" />
+            <path d="M9 10a3 3 0 1 1 6 0v1a3 3 0 1 1-6 0v-1z" fill="#fff" />
+            <rect x="9" y="16" width="6" height="2" rx="1" fill="#fff" />
+          </svg>
+          <h2 className="text-2xl font-bold text-emerald-700 mb-2">Login Required</h2>
+          <p className="text-gray-700 dark:text-gray-200 mb-6 text-center max-w-xs">
+            You need to be logged in to view your Fantasy team.
+          </p>
+          <Link
+            to="/profile"
+            className="bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white font-bold px-6 py-2 rounded-lg shadow transition"
+          >
+            Go to Profile
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen bg-white dark:bg-slate-900 text-gray-900 dark:text-gray-100">
