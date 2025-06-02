@@ -8,7 +8,14 @@ export default function AnalysisHub() {
 
     return (
         <div className="p-4">
-            <h2 className="text-2xl font-bold mb-4">Analysis Hub</h2>
+            <div className="flex justify-between items-center mb-4">
+                <h2 className="text-2xl font-bold">Analysis Hub</h2>
+                <div className="flex items-center space-x-3">
+                    <span className="text-sm text-gray-400">Powered by</span>
+                    {/* Replace this inline SVG with your actual Premier League SVG/logo */}
+                    <img src="/premier-league-1.svg" alt="Premier League logo" className="h-20 w-auto" />
+                </div>
+            </div>
 
             <div className="flex space-x-4 mb-6 border-b pb-2">
                 <button
