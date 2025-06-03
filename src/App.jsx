@@ -9,6 +9,8 @@ import MatchDetail from './components/Home/MatchDetail';
 import AnalysisHub from './pages/AnalysisHub';
 import PlayerPage from './pages/PlayerPage';
 import CompetitionDetails from './pages/CompetitionDetails';
+import TeamsSearch from './pages/TeamsSearch';
+import PlayersSearch from './pages/PlayersSearch';
 import { useMatchNotifications } from './hooks/useMatchNotifications';
 import BettingPage from './pages/BettingPage';
 
@@ -35,6 +37,8 @@ function App() {
             <Route path="/profile" element={<Profile />} />
             <Route path="/match/:matchId" element={<MatchDetail />} />
             <Route path="/team/:teamId" element={<ClubPage />} />
+            <Route path="/teams" element={<TeamsSearch />} />
+            <Route path="/players" element={<PlayersSearch />} />
             <Route path="/analysis" element={<AnalysisHub />} />
             <Route path="/betting" element={<BettingPage />} />
             <Route path="/player/:playerId" element={<PlayerPage />} />
