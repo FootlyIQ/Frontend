@@ -25,7 +25,7 @@ export default function MatchDetail() {
     const fetchMatchDetails = async () => {
       try {
         setIsRefreshing(true);
-        const response = await axios.get(`http://127.0.0.1:5000/match-statistics/${matchId}`);
+        const response = await axios.get(`https://footlyiq-backend.onrender.com/match-statistics/${matchId}`);
         setMatchData(response.data);
         setLastUpdated(new Date());
         setError('');

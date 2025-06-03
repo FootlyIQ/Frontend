@@ -15,7 +15,7 @@ function PlayerPage() {
       setLoading(true);
       try {
         // Fetch player details
-        const resDetails = await fetch(`http://localhost:5000/player/${playerId}`, {
+        const resDetails = await fetch(`https://footlyiq-backend.onrender.com/player/${playerId}`, {
           headers: {
             Accept: 'application/json',
             'Content-Type': 'application/json',
@@ -29,7 +29,7 @@ function PlayerPage() {
 
         // Fetch player matches
         const resMatches = await fetch(
-          `http://localhost:5000/player/${playerId}/matches?limit=50`,
+          `https://footlyiq-backend.onrender.com/player/${playerId}/matches?limit=50`,
           {
             headers: {
               Accept: 'application/json',

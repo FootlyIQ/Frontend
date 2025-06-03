@@ -20,9 +20,9 @@ function App() {
 
   return (
     <Router>
-      <div className="flex flex-col lg:flex-row min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+      <div className="flex flex-col lg:flex-row min-h-screen bg-gray-50 text-gray-900">
         <Navbar />
-        <main className="flex-1 p-6 bg-gray-50 dark:bg-gray-800">
+        <main className="flex-1">
           {/* Monitoring indicator (optional, can be removed for production) */}
           {isMonitoring && (
             <div className="fixed bottom-4 left-4 z-50 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-medium flex items-center gap-2">

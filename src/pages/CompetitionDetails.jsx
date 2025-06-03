@@ -16,9 +16,7 @@ export default function CompetitionDetails() {
       setIsLoading(true);
       try {
         const response = await axios.get(
-          `http://127.0.0.1:5000/competition/${code}${
-            selectedSeason ? `?season=${selectedSeason}` : ''
-          }`
+          `https://footlyiq-backend.onrender.com/competition/${code}${selectedSeason ? `?season=${selectedSeason}` : ''}`
         );
         setData(response.data);
         setError('');

@@ -39,7 +39,7 @@ const FootballPitchXG = ({ width = 700, height = 453 }) => {
         setHeatmapData([]); // Clear previous render
 
         const fetchOnce = async () => {
-            const res = await fetch(`http://127.0.0.1:5000/api/xG/heatmap?team_name=${encodeURIComponent(selectedTeam)}`);
+            const res = await fetch(`https://footlyiq-backend.onrender.com/api/xG/heatmap?team_name=${encodeURIComponent(selectedTeam)}`);
             const data = await res.json();
             setHeatmapData(data);
         };

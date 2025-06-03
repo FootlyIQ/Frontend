@@ -12,7 +12,7 @@ export default function Home() {
     const fetchTodaysMatches = async () => {
       try {
         const today = new Date().toISOString().split('T')[0];
-        const response = await axios.get(`http://127.0.0.1:5000/matches?date=${today}`);
+        const response = await axios.get(`https://footlyiq-backend.onrender.com/matches?date=${today}`);
         setTodaysMatches(response.data);
       } catch (err) {
         console.error("Error fetching today's matches for sidebar:", err);
