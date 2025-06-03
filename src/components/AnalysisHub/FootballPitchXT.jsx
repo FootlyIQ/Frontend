@@ -406,6 +406,13 @@ const FootballPitchXT = ({ width = 700, height = 453 }) => {
                 <button onClick={fetchShotProb} disabled={loading} className={styles.button}>
                     Show Shot Probability Map
                 </button>
+
+                {heatmapData && (
+                    <p className="text-gray-400 mt-4">The index shows the ratio of passes moved compared to the zone where the most passes were moved (1.000).</p>
+                )}
+                {shotsData && (
+                    <p className="text-gray-400 mt-4">The index shows the ratio of shots compared to the zone where the most shots were taken (1.000).</p>
+                )}
             </aside>
         </div>
     );
