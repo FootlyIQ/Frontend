@@ -7,9 +7,9 @@ export default function AnalysisHub() {
     const [activeTab, setActiveTab] = useState("pass");
 
     return (
-        <div className="p-4">
+        <div className="p-4 bg-slate-800">
             <div className="flex justify-between items-center mb-4">
-                <h2 className="text-2xl font-bold">Analysis Hub</h2>
+                <h2 className="text-2xl font-bold text-gray-50">Analysis Hub</h2>
                 <div className="flex items-center space-x-3">
                     <span className="text-sm text-gray-400">Powered by</span>
                     {/* Replace this inline SVG with your actual Premier League SVG/logo */}
@@ -17,7 +17,7 @@ export default function AnalysisHub() {
                 </div>
             </div>
 
-            <div className="flex space-x-4 mb-6 border-b pb-2">
+            <div className="flex space-x-4 mb-6 border-b border-gray-50 pb-2">
                 <button
                     onClick={() => setActiveTab("pass")}
                     className={`px-4 py-2 rounded-t ${
