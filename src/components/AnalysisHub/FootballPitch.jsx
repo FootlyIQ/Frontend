@@ -23,7 +23,7 @@ const FootballPitch = ({ width = 700, height = 453 }) => {
     const uniqueLabels = Array.from(new Set(passes.map(p => p.label)));
 
     const fetchPasses = () => {
-        fetch(`http://127.0.0.1:5000/api/passes/most-common?team_name=${encodeURIComponent(selectedTeam)}`)
+        fetch(`https://footlyiq-backend.onrender.com/api/passes/most-common?team_name=${encodeURIComponent(selectedTeam)}`)
             .then(res => res.json())
             .then(data => {
                 setPasses(data);
