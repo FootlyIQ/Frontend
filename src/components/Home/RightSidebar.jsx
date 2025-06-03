@@ -10,18 +10,20 @@ export default function RightSidebar({ todaysMatches = [] }) {
   const [user] = useAuthState(auth);
   const { favorites } = useFavorites();
   const [hotMatches, setHotMatches] = useState([]);
-  const [isLoadingHotMatches, setIsLoadingHotMatches] = useState(false);
+  const [isLoadingHotMatches, setIsLoadingHotMatches] = useState(true);
   const [userActivity, setUserActivity] = useState({ votes: 0, favorites: 0 });
   const [trendingData, setTrendingData] = useState({ teams: [], players: [] });
 
   // Calculate hot matches based on voting data and live status
   useEffect(() => {
-    // Set loading state immediately when component mounts
-    setIsLoadingHotMatches(true);
+    if (!todaysMatches || todaysMatches.length === 0) {
+      // Add timeout to stop loading if no matches after 2 seconds
+      const timeoutId = setTimeout(() => {
+        setIsLoadingHotMatches(false);
+        setHotMatches([]);
+      }, 2000);
 
-    if (!todaysMatches.length) {
-      // If no matches yet, keep loading state until matches arrive
-      return;
+      return () => clearTimeout(timeoutId);
     }
 
     const calculateHotMatches = async () => {
