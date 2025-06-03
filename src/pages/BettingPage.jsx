@@ -7,7 +7,7 @@ export default function BettingPage() {
     useEffect(() => {
         const fetchOdds = async () => {
             try {
-                const res = await fetch('http://127.0.0.1:5000/odds');
+                const res = await fetch('https://footlyiq-backend.onrender.com/odds');
                 const data = await res.json();
                 setMatches(data);
             } catch (err) {

@@ -54,7 +54,7 @@ export default function FantasyPitch() {
     const fetchFixtureDifficulty = async () => {
       try {
         const res = await axios.get(
-          `http://127.0.0.1:5000/api/fpl/fixture-difficulty?gameweek=${selectedGameweek}&count=${fdrGws}`
+          `https://footlyiq-backend.onrender.com/api/fpl/fixture-difficulty?gameweek=${selectedGameweek}&count=${fdrGws}`
         );
         setFixtureDifficulty(res.data);
       } catch (err) {
@@ -67,7 +67,7 @@ export default function FantasyPitch() {
   useEffect(() => {
     const fetchCurrentGameweek = async () => {
       try {
-        const res = await axios.get("http://127.0.0.1:5000/api/fpl/current-gameweek");
+        const res = await axios.get("https://footlyiq-backend.onrender.com/api/fpl/current-gameweek");
         const gw = res.data.current_gameweek;
         setCurrentGameweek(gw);
         setSelectedGameweek(gw);
@@ -97,7 +97,7 @@ export default function FantasyPitch() {
     const fetchLiveRank = async () => {
       if (!teamId || !selectedGameweek) return;
       try {
-        const res = await axios.get(`http://127.0.0.1:5000/api/fpl/entry-history/${teamId}`);
+        const res = await axios.get(`https://footlyiq-backend.onrender.com/api/fpl/entry-history/${teamId}`);
         const history = res.data.current || [];
         const curr = history.find(gw => gw.event === selectedGameweek);
         const prev = history.find(gw => gw.event === selectedGameweek - 1);
@@ -120,7 +120,7 @@ export default function FantasyPitch() {
   useEffect(() => {
     const fetchFixtureDifficulty = async () => {
       try {
-        const res = await axios.get(`http://127.0.0.1:5000/api/fpl/fixture-difficulty?gameweek=${selectedGameweek}`);
+        const res = await axios.get(`https://footlyiq-backend.onrender.com/api/fpl/fixture-difficulty?gameweek=${selectedGameweek}`);
         setFixtureDifficulty(res.data);
       } catch (err) {
         setFixtureDifficulty(null);
@@ -149,7 +149,7 @@ export default function FantasyPitch() {
   const fetchTeam = async (id, gw = selectedGameweek) => {
     try {
       setLoading(true);
-      const res = await axios.get(`http://127.0.0.1:5000/api/fpl/team/${id}?gameweek=${gw}`);
+      const res = await axios.get(`https://footlyiq-backend.onrender.com/api/fpl/team/${id}?gameweek=${gw}`);
       const data = res.data;
 
       setStartingPlayers(data.starting_players || []);
@@ -168,7 +168,7 @@ export default function FantasyPitch() {
 
   const handlePlayerClick = async (player) => {
     try {
-      const res = await axios.get(`http://127.0.0.1:5000/api/fpl/player-details/${player.id}?gameweek=${gameweek}&is_captain=${player.is_captain}`);
+      const res = await axios.get(`https://footlyiq-backend.onrender.com/api/fpl/player-details/${player.id}?gameweek=${gameweek}&is_captain=${player.is_captain}`);
       setSelectedPlayer({ ...player, stats: res.data });
     } catch (err) {
       console.error("Failed to fetch player stats", err);
@@ -194,7 +194,7 @@ export default function FantasyPitch() {
     setShowCaptaincyBox(false);
     try {
       const res = await axios.get(
-        `http://127.0.0.1:5000/api/fpl/captaincy/${teamId}?gameweek=${selectedGameweek}`
+        `https://footlyiq-backend.onrender.com/api/fpl/captaincy/${teamId}?gameweek=${selectedGameweek}`
       );
       setCaptaincySuggestions(res.data);
       setShowCaptaincyBox(true);
@@ -216,7 +216,7 @@ export default function FantasyPitch() {
     setShowTransferBox(false);
     try {
       const res = await axios.get(
-        `http://127.0.0.1:5000/api/fpl/transfers/${teamId}?gameweek=${selectedGameweek}`
+        `https://footlyiq-backend.onrender.com/api/fpl/transfers/${teamId}?gameweek=${selectedGameweek}`
       );
       setTransferSuggestions(res.data);
       setShowTransferBox(true);

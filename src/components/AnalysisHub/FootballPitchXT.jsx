@@ -24,7 +24,7 @@ const FootballPitchXT = ({ width = 700, height = 453 }) => {
         setLoading(true);
         setShotsData(null);     //clear shots xT
         setProbData(null);     //clear shot probability 
-        fetch(`http://127.0.0.1:5000/api/xT/moving?team_name=${encodeURIComponent(selectedTeam)}`)
+        fetch(`https://footlyiq-backend.onrender.com/api/xT/moving?team_name=${encodeURIComponent(selectedTeam)}`)
         .then(res => res.json())
         .then(data => {
             const counts = data.counts;
@@ -45,7 +45,7 @@ const FootballPitchXT = ({ width = 700, height = 453 }) => {
         setLoading(true);
         setHeatmapData(null);   //clear moving xT
         setProbData(null);     //clear shot probability 
-        fetch(`http://127.0.0.1:5000/api/xT/shots?team_name=${encodeURIComponent(selectedTeam)}`)
+        fetch(`https://footlyiq-backend.onrender.com/api/xT/shots?team_name=${encodeURIComponent(selectedTeam)}`)
         .then(res => res.json())
         .then(data => {
             const counts = data.counts;
@@ -66,7 +66,7 @@ const FootballPitchXT = ({ width = 700, height = 453 }) => {
         setLoading(true);
         setHeatmapData(null);   //clear moving xT
         setShotsData(null);     //clear shots xT
-        fetch(`http://127.0.0.1:5000/api/xT/shot-probability?team_name=${encodeURIComponent(selectedTeam)}`)
+        fetch(`https://footlyiq-backend.onrender.com/api/xT/shot-probability?team_name=${encodeURIComponent(selectedTeam)}`)
         .then(res => res.json())
         .then(data => {
             setProbData(data.probability);

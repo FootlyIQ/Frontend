@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import logo from '../assets/FootlyIQ_2.png';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -8,7 +9,10 @@ export default function Navbar() {
     <nav className="bg-slate-900 p-6 shadow-lg lg:w-64 w-full">
       {/* Logo & Hamburger */}
       <div className="flex justify-between items-center lg:block">
-        <h1 className="text-2xl font-bold text-emerald-500">⚽ FootlyIQ</h1>
+        <Link to="/" className="flex items-center">
+          <img src={logo} alt="FootlyIQ Logo" className="h-8 mr-2" />
+          <h1 className="text-2xl font-bold text-emerald-500">FootlyIQ</h1>
+        </Link>
         {/* Hamburger only visible on small screens */}
         <button
           className="lg:hidden text-stone-200 focus:outline-none"

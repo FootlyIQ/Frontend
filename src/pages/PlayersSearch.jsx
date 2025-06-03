@@ -172,7 +172,7 @@ export default function PlayersSearch() {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/api/search/players?q=${encodeURIComponent(query.trim())}`
+        `https://footlyiq-backend.onrender.com/api/search/players?q=${encodeURIComponent(query.trim())}`
       );
       const data = await response.json();
 

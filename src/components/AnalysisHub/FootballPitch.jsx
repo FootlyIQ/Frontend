@@ -33,7 +33,7 @@ const FootballPitch = ({ width = 700, height = 453 }) => {
     };
 
     const fetchLastThirdPasses = () => {
-        fetch(`http://127.0.0.1:5000/api/passes/last-third?team_name=${encodeURIComponent(selectedTeam)}`)
+        fetch(`https://footlyiq-backend.onrender.com/api/passes/last-third?team_name=${encodeURIComponent(selectedTeam)}`)
             .then(res => res.json())
             .then(data => {
                 setPasses(data);
@@ -50,7 +50,7 @@ const FootballPitch = ({ width = 700, height = 453 }) => {
         (isLongPass) ? params.append("long_pass", "true") : params.append("long_pass", "false");
         if (minPassLength) params.append("pass_length", minPassLength);
 
-        fetch(`http://127.0.0.1:5000/api/passes/filters?${params.toString()}`)
+        fetch(`https://footlyiq-backend.onrender.com/api/passes/filters?${params.toString()}`)
         .then(res => res.json())
         .then(data => {
             setPasses(data);

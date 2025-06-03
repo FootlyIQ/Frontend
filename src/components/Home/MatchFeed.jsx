@@ -23,7 +23,7 @@ export default function MatchFeed() {
       setIsLoading(true);
       try {
         const response = await axios.get(
-          `http://127.0.0.1:5000/matches${selectedDate ? `?date=${selectedDate}` : ''}`
+          `https://footlyiq-backend.onrender.com/matches${selectedDate ? `?date=${selectedDate}` : ''}`
         );
         setMatchesData(response.data);
         setError('');
@@ -75,7 +75,7 @@ export default function MatchFeed() {
     const fetchUpdates = async () => {
       try {
         const response = await axios.get(
-          `http://127.0.0.1:5000/matches${selectedDate ? `?date=${selectedDate}` : ''}`
+          `https://footlyiq-backend.onrender.com/matches${selectedDate ? `?date=${selectedDate}` : ''}`
         );
 
         setMatchesData(response.data);

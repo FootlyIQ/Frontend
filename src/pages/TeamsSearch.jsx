@@ -136,7 +136,7 @@ export default function TeamsSearch() {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/api/search/teams?q=${encodeURIComponent(query.trim())}`
+        `https://footlyiq-backend.onrender.com/api/search/teams?q=${encodeURIComponent(query.trim())}`
       );
       const data = await response.json();
 

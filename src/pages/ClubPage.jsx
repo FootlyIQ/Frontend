@@ -38,7 +38,7 @@ function ClubPage() {
   useEffect(() => {
     const fetchFilters = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/team-filters/${teamId}`);
+        const response = await fetch(`https://footlyiq-backend.onrender.com/team-filters/${teamId}`);
         if (!response.ok) {
           throw new Error('Error loading filters');
         }
@@ -77,7 +77,7 @@ function ClubPage() {
   // Separate function to fetch matches with filters
   const fetchMatchesWithFilters = async (season, competition) => {
     try {
-      let matchesUrl = `http://localhost:5000/team-matches/${teamId}`;
+      let matchesUrl = `https://footlyiq-backend.onrender.com/team-matches/${teamId}`;
       const params = new URLSearchParams();
 
       if (season) {
@@ -114,7 +114,7 @@ function ClubPage() {
   useEffect(() => {
     const fetchSquadData = async () => {
       try {
-        const resSquad = await fetch(`http://localhost:5000/team-squad/${teamId}`);
+        const resSquad = await fetch(`https://footlyiq-backend.onrender.com/team-squad/${teamId}`);
         if (!resSquad.ok) {
           throw new Error('Error loading squad');
         }

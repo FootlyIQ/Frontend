@@ -55,7 +55,7 @@ export const useLiveMatchStatus = (favoriteMatches) => {
         // Check all recent matches, not just 5
         for (const match of matchesToCheck) {
           try {
-            const response = await fetch(`http://localhost:5000/match-statistics/${match.id}`);
+            const response = await fetch(`https://footlyiq-backend.onrender.com/match-statistics/${match.id}`);
             if (response.ok) {
               const data = await response.json();
               const status = data.generalInfo?.status || match.status;

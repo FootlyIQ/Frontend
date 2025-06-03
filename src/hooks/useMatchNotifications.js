@@ -187,7 +187,7 @@ export const useMatchNotifications = () => {
   // Fetch current match data for monitoring
   const fetchMatchData = async (matchId) => {
     try {
-      const response = await fetch(`http://localhost:5000/match-statistics/${matchId}`);
+      const response = await fetch(`https://footlyiq-backend.onrender.com/match-statistics/${matchId}`);
       if (!response.ok) {
         // Don't log 500 errors to reduce console noise
         if (response.status !== 500) {
@@ -217,7 +217,7 @@ export const useMatchNotifications = () => {
         return [];
       }
 
-      const response = await fetch(`http://localhost:5000/matches?date=${today}`);
+      const response = await fetch(`https://footlyiq-backend.onrender.com/matches?date=${today}`);
       if (!response.ok) {
         // Don't log 500 errors to reduce console noise
         if (response.status !== 500) {
