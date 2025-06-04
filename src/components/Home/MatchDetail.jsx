@@ -507,7 +507,7 @@ export default function MatchDetail() {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-900 p-4 rounded-xl shadow-md text-gray-900 dark:text-gray-100">
+    <div className="bg-slate-800 p-4 shadow-md text-gray-900">
       {/* Match Header */}
       <div className="mb-8">
         {/* Teams and Score */}
@@ -547,7 +547,7 @@ export default function MatchDetail() {
                   !statistics?.homeTeam?.goals &&
                   !statistics?.awayTeam?.goals) ? (
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-gray-400">vs</div>
+                    <div className="text-2xl font-bold text-gray-500">vs</div>
                     <time className="text-sm text-gray-500">
                       {generalInfo.date.split(' ob ')[1]}
                     </time>
@@ -715,7 +715,7 @@ export default function MatchDetail() {
               className={`py-4 px-1 border-b-2 font-medium text-sm ${
                 activeTab === 'overview'
                   ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  : 'border-transparent text-gray-300 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
               Overview
@@ -725,7 +725,7 @@ export default function MatchDetail() {
               className={`py-4 px-1 border-b-2 font-medium text-sm ${
                 activeTab === 'lineups'
                   ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  : 'border-transparent text-gray-300 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
               Lineups
@@ -735,7 +735,7 @@ export default function MatchDetail() {
               className={`py-4 px-1 border-b-2 font-medium text-sm ${
                 activeTab === 'statistics'
                   ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  : 'border-transparent text-gray-300 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
               Statistics
