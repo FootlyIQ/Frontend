@@ -3,7 +3,7 @@ import * as d3 from "d3";
 import styles from './pitch.module.css';
 
 
-const FootballPitchXT = ({ width = 700, height = 453 }) => {
+const FootballPitchXT = ({ width = 772, height = 500 }) => {
     const [selectedTeam, setSelectedTeam] = useState("Arsenal");    //lahko je blank
     const [heatmapData, setHeatmapData] = useState(null);
     const [shotsData, setShotsData] = useState(null);

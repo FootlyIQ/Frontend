@@ -4,7 +4,7 @@ import clusterDescriptions from "./cluster_descriptions.json";
 import lastThirdDesc from "./last_third_desc.json";
 import styles from './pitch.module.css';
 
-const FootballPitch = ({ width = 700, height = 453 }) => {
+const FootballPitch = ({ width = 772, height = 500 }) => {
     const [passes, setPasses] = useState([]);
     const [descriptions, setDescriptions] = useState({});
     const [selectedTeam, setSelectedTeam] = useState("Arsenal");
