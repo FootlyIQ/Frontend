@@ -326,7 +326,7 @@ export default function FantasyPitch() {
   }
 
   return (
-    <div className="flex flex-col lg:flex-row min-h-screen bg-white dark:bg-slate-900 text-gray-900 dark:text-gray-100">
+    <div className="flex flex-col lg:flex-row min-h-screen bg-slate-800 text-gray-100">  {/*bg-white dark:bg-slate-900 text-gray-900 dark:text-gray-100 */}
       <main className="flex-1 p-6">
         {/* Gameweek and Total Points Section */}
         <div className="gameweek-info text-center mb-6 relative">
