@@ -166,6 +166,8 @@ export default function FantasyPitch() {
     }
   };
 
+  
+
   const handlePlayerClick = async (player) => {
     try {
       const res = await axios.get(`https://footlyiq-backend.onrender.com/api/fpl/player-details/${player.id}?gameweek=${gameweek}&is_captain=${player.is_captain}`);
