@@ -21,6 +21,7 @@ export default function FantasyPitch() {
   const [benchPlayers, setBenchPlayers] = useState([]);
   const [totalPoints, setTotalPoints] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [fantasyError, setFantasyError] = useState(false);
   const [gameweek, setGameweek] = useState(38);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [selectedGameweek, setSelectedGameweek] = useState(38); // Default gameweek
@@ -66,14 +67,18 @@ export default function FantasyPitch() {
 
   useEffect(() => {
     const fetchCurrentGameweek = async () => {
+      setLoading(true);
+      setFantasyError(false);
       try {
         const res = await axios.get("https://footlyiq-backend.onrender.com/api/fpl/current-gameweek");
         const gw = res.data.current_gameweek;
         setCurrentGameweek(gw);
         setSelectedGameweek(gw);
         setGameweek(gw);
+        setLoading(false);
       } catch (err) {
-        console.error("Failed to fetch current gameweek", err);
+        setFantasyError(true);
+        setLoading(false);
       }
     };
     fetchCurrentGameweek();
@@ -149,15 +154,15 @@ export default function FantasyPitch() {
   const fetchTeam = async (id, gw = selectedGameweek) => {
     try {
       setLoading(true);
+      setFantasyError(false);
       const res = await axios.get(`https://footlyiq-backend.onrender.com/api/fpl/team/${id}?gameweek=${gw}`);
       const data = res.data;
-
       setStartingPlayers(data.starting_players || []);
       setBenchPlayers(data.bench_players || []);
       setTotalPoints(data.total_points || 0);
       setGameweek(gw);
     } catch (err) {
-      console.error("Failed to fetch team", err);
+      setFantasyError(true);
       setStartingPlayers([]);
       setBenchPlayers([]);
       setTotalPoints(0);
@@ -165,8 +170,6 @@ export default function FantasyPitch() {
       setLoading(false);
     }
   };
-
-  
 
   const handlePlayerClick = async (player) => {
     try {
@@ -303,6 +306,35 @@ export default function FantasyPitch() {
     </div>
   );
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-slate-900 text-white">
+        <div className="text-center">
+          <svg className="animate-spin mx-auto mb-4" width="48" height="48" fill="none" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10" stroke="#059669" strokeWidth="4" opacity="0.2" />
+            <path d="M12 2a10 10 0 0 1 10 10" stroke="#059669" strokeWidth="4" strokeLinecap="round" />
+          </svg>
+          <div className="text-2xl font-bold">Loading Fantasy Data...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (fantasyError) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-slate-900 text-white">
+        <div className="text-center">
+          <svg className="mx-auto mb-4" width="48" height="48" fill="none" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10" fill="#ef4444" />
+            <text x="12" y="17" textAnchor="middle" fontSize="16" fill="#fff" fontWeight="bold">!</text>
+          </svg>
+          <div className="text-2xl font-bold mb-2">Due to the season ending, Fantasy API is currently unavailable</div>
+          <div className="text-lg">Thank you for your understanding.</div>
+        </div>
+      </div>
+    );
+  }
+
   if (!isLoggedIn) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-slate-900 dark:to-slate-800">
@@ -407,7 +439,7 @@ export default function FantasyPitch() {
           {/* Live Ranking Segment */}
           {liveRank && (
             <div className="absolute top-0 right-0 mt-2 mr-2 z-10">
-              <div className="bg-white dark:bg-slate-900 border-2 border-emerald-500 rounded-xl shadow-lg px-6 py-3 flex flex-col items-center min-w-[180px]">
+              <div className="bg-white dark:bg-slate-900 border-2 border-emerald-500 rounded-xl shadow-lg px-3 py-2 flex flex-col items-center min-w-[120px]">
                 <div className="flex items-center gap-2 mb-1">
                   <svg width="22" height="22" fill="none" viewBox="0 0 24 24">
                     <circle cx="12" cy="12" r="10" fill="#059669" />
@@ -477,7 +509,7 @@ export default function FantasyPitch() {
               {showCaptaincyBox && (
                 <div
                   ref={captaincyBoxRef}
-                  className="flex-1 bg-white dark:bg-slate-800 rounded-lg shadow p-4 mb-4 w-full mx-auto"
+                  className="flex-1 bg-white dark:bg-slate-800 rounded-lg shadow p-4 mb-4 w-full mx-auto border border-white dark:border-white"
                 >
                   <div className="flex justify-between items-center mb-4">
                     <h3 className="font-bold mb-4 text-xl text-emerald-700 flex items-center gap-2">
@@ -583,10 +615,10 @@ export default function FantasyPitch() {
               {showTransferBox && transferSuggestions && (
                 <div
                   ref={transferBoxRef}
-                  className="flex-1 bg-white dark:bg-slate-800 rounded-lg shadow p-4 mb-4 w-full mx-auto"
+                  className="flex-1 bg-white dark:bg-slate-800 rounded-lg shadow p-4 mb-4 w-full mx-auto border border-white dark:border-white"
                 >
                   <div className="flex justify-between items-center mb-4">
-                    <h3 className="font-bold mb-4 text-xl text-blue-700 flex items-center gap-2">
+                    <h3 className="font-bold mb-4 text-xl text-white-700 flex items-center gap-2">
                       <svg width="28" height="28" fill="none" viewBox="0 0 24 24">
                         <circle cx="12" cy="12" r="10" fill="#2563eb" />
                         <text x="12" y="17" textAnchor="middle" fontSize="14" fill="#fff" fontWeight="bold">T</text>
@@ -738,7 +770,7 @@ export default function FantasyPitch() {
               {/* Fixture Difficulty Rating Section */}
               {showFdrSection && fixtureDifficulty && (
                 <div className="flex flex-col gap-6 justify-center mt-8">
-                  <div className="flex-1 bg-gradient-to-br from-emerald-50 via-white to-red-50 dark:from-slate-800 dark:via-slate-900 dark:to-slate-800 rounded-2xl shadow-lg p-6 mb-4 w-full mx-auto border border-emerald-100 dark:border-slate-700">
+                  <div className="flex-1 bg-gradient-to-br from-emerald-50 via-white to-red-50 dark:from-slate-800 dark:via-slate-900 dark:to-slate-800 rounded-2xl shadow-lg p-6 mb-4 w-full mx-auto border border-white dark:border-white">
                     <div className="flex items-center justify-between mb-6">
                       <h3 className="font-bold text-2xl text-emerald-700 flex items-center gap-3 m-0">
                         <svg width="34" height="34" fill="none" viewBox="0 0 24 24">
