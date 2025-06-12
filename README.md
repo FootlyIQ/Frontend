@@ -1,12 +1,26 @@
-# React + Vite
+# 🎨FootlyIQ Frontend (React)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+FootlyIQ Frontend is a responsive React single-page application powered by Vite and styled with Tailwind CSS. It delivers an interactive user interface for exploring football data, fantasy team management, visual stats, and betting insights. The frontend communicates with the Flask backend and Node.js microservices to fetch live and historical football data and render dynamic, pitch-based visualizations.
 
-Currently, two official plugins are available:
+## 🛠️Tech Highlights
+- React + Vite + Tailwind CSS
+- React Router for SPA navigation
+- Fully integrated with Flask backend and Express microservices
+- Interactive dashboards with SVG-based data visualizations (using D3 library)
+- Fantasy football UI with rankings, team suggestions and other perks
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 📑Sections
+Our web app gives you plenty choices when looking for football related info. You can visit:
+- **Match feed page** with all the matches for selected day
+- **Single-match page** with all relevant data for one match (lineups, stats, users' outcome predictions...)
+- **Team page** with all neccessary team info (players, coach, previous results...)
+- **Player page** with all neccessary player info (personal info, previous performances...)
+- **Competition page** with all relevant data for a single competition (champions league, premier league...)
+- **Player/Team search page** where you can search up your favorite teams and players
+- **Fantasy page** where we encourage you to connect your fpl team and see what our fantasy section has to offer ;)
+- **Analysis hub** where we provide modern stats, that use intelligent data analysis and machine learning for Premier league teams
+- **Betting page** where we provide you latest odds for upcoming matches
+- **Profile page** where you can add your fantasy team or manage your notifications and favorites
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Full overview
+For full documentation please visit our organization page at https://github.com/FootlyIQ
